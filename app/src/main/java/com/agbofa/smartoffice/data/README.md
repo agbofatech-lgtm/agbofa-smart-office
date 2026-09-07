@@ -1,7 +1,9 @@
+
 # data
 
-Phase 1 boundary only.
+Local persistence adapters and repository implementations.
 
-Future home of Room adapters and repository implementations.
+Phase 3: `InMemoryCaptureRepository` only.
 
-Phase 1 rule: no database, no DAOs, no entities, no Room dependency.
+Room schema is deferred. Do not add Database.kt, DAOs, or tables for
+tasks, finance, journal, or workflows.

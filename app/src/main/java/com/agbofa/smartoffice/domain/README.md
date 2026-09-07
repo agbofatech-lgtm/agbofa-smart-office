@@ -1,15 +1,12 @@
+
 # domain
 
 Deterministic product truth. Pure Kotlin.
 
-Phase 2 authorized contents live under `foundation/`:
+Authorized contents:
 
-- identity
-- time
-- result
-- error
-- event
-- context
+- `foundation/` — identity, time, result, error, event, context
+- `capture/` — immutable capture evidence (Phase 3)
 
 This package must never depend on Android, Compose, Room, WorkManager,
 Hilt, Retrofit, Firebase, or network APIs.

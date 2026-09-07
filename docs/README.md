@@ -24,5 +24,6 @@
 - [ADR-007 Domain Data Ownership](adr/ADR-007-Domain-Data-Ownership.md)
 - [ADR-008 Time and Temporal Modeling](adr/ADR-008-Time-and-Temporal-Modeling.md)
 - [ADR-009 Domain Foundation Primitives](adr/ADR-009-Domain-Foundation-Primitives.md)
+- [ADR-010 Capture Evidence Boundary](adr/ADR-010-Capture-Evidence-Boundary.md)
 
-Phase 0 decisions remain locked. Phase 1 is the repository foundation. Phase 2 adds domain primitives only. Phases 3–16 and all product features remain CLOSED.
+Phase 0–2 decisions remain locked. Phase 3 adds Capture evidence only. Phases 4–16 remain CLOSED.

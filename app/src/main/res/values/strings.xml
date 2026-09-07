@@ -4,4 +4,8 @@
     <string name="product_name">AGBOFA SMART OFFICE</string>
     <string name="product_tagline">Personal Operations System</string>
     <string name="foundation_status">System foundation initialized</string>
+    <string name="capture_title">Capture</string>
+    <string name="capture_hint">Enter an expression. The system stores it. It does not interpret it.</string>
+    <string name="capture_field_label">Expression</string>
+    <string name="capture_action">Capture</string>
 </resources>

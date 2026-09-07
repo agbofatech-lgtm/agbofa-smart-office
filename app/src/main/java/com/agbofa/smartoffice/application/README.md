@@ -1,7 +1,10 @@
+
 # application
 
-Phase 1 boundary only.
+Use cases, commands, and queries.
 
-Future home of commands, queries, and use cases.
+Phase 3: `CaptureExpressionUseCase` accepts an expression and persists
+an immutable capture through `CaptureRepository`.
 
-Phase 1 rule: no use-case classes, no fake ports, no product orchestration.
+Application may depend on domain. It must not depend on Compose or Room
+entities. It must not interpret captured text.

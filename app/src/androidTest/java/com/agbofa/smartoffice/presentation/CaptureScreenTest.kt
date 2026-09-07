@@ -9,18 +9,16 @@ import org.junit.runner.RunWith
 import org.junit.Test
 
 /**
- * Phase 1 instrumentation infrastructure.
- * Not executed in the constitution workspace (no Android SDK).
+ * Phase 3 instrumentation source. Not executed here (no Android SDK).
  */
 @RunWith(AndroidJUnit4::class)
-class FoundationScreenTest {
+class CaptureScreenTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun foundationScreenShowsProductIdentity() {
-        composeRule.onNodeWithText("AGBOFA SMART OFFICE").assertIsDisplayed()
-        composeRule.onNodeWithText("Personal Operations System").assertIsDisplayed()
-        composeRule.onNodeWithText("System foundation initialized").assertIsDisplayed()
+    fun captureScreenShowsInputAndAction() {
+        composeRule.onNodeWithText("Capture").assertIsDisplayed()
+        composeRule.onNodeWithText("Expression").assertIsDisplayed()
     }
 }

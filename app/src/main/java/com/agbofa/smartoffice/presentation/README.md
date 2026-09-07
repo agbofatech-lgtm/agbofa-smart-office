@@ -1,10 +1,9 @@
+
 # presentation
 
-Compose screens, theme, navigation host, ViewModels.
+Compose screens, theme, navigation host.
 
-Phase 1 contents: MainActivity, foundation screen, Material 3 theme.
+Phase 3 contents: MainActivity hosts `CaptureScreen`.
 
-This layer renders. It does not classify, calculate money, transition
-state, or schedule. See docs/adr/ADR-005-No-UI-Business-Logic.md.
-
-Do not add journal, task, finance, calendar, or dashboard widgets.
+The screen collects text and displays a use-case result string.
+It does not classify, calculate money, or schedule.
