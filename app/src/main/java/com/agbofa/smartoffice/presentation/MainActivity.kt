@@ -26,6 +26,8 @@ import com.agbofa.smartoffice.presentation.navigation.AppDestination
 import com.agbofa.smartoffice.presentation.navigation.SmartOfficeScaffold
 import com.agbofa.smartoffice.presentation.search.SearchScreen
 import com.agbofa.smartoffice.presentation.search.SearchViewModel
+import com.agbofa.smartoffice.presentation.intelligence.IntelligenceScreen
+import com.agbofa.smartoffice.presentation.intelligence.IntelligenceViewModel
 import com.agbofa.smartoffice.presentation.theme.SmartOfficeTheme
 import java.time.Instant
 
@@ -53,6 +55,9 @@ class MainActivity : ComponentActivity() {
     private val searchViewModel: SearchViewModel by viewModels {
         factory { SearchViewModel(app.search, app.rebuildSearchIndex) }
     }
+    private val intelligenceViewModel: IntelligenceViewModel by viewModels {
+        factory { IntelligenceViewModel(app.generateIntelligence) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +65,7 @@ class MainActivity : ComponentActivity() {
         val context = edgeContext()
         dashboardViewModel.refresh(context)
         decisionViewModel.refresh()
+        intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
         analyticsViewModel.refresh(context)
         enableEdgeToEdge()
         setContent {
@@ -109,7 +115,13 @@ class MainActivity : ComponentActivity() {
                         )
                         AppDestination.ANALYTICS -> AnalyticsScreen(
                             state = analyticsViewModel.state,
-                            onRefresh = { analyticsViewModel.refresh(edgeContext()) },
+                            onRefresh = { intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
+        analyticsViewModel.refresh(edgeContext()) },
+                            modifier = modifier,
+                        )
+                        AppDestination.INTELLIGENCE -> IntelligenceScreen(
+                            state = intelligenceViewModel.state,
+                            onRefresh = { intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now()))) },
                             modifier = modifier,
                         )
                         AppDestination.SEARCH -> SearchScreen(

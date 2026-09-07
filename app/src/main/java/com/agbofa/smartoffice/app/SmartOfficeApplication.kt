@@ -17,6 +17,7 @@ import com.agbofa.smartoffice.application.decision.GetDecisionProjectionUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionsUseCase
 import com.agbofa.smartoffice.application.decision.ListDecisionsUseCase
+import com.agbofa.smartoffice.application.intelligence.GenerateIntelligenceReportUseCase
 import com.agbofa.smartoffice.application.search.RebuildSearchIndexUseCase
 import com.agbofa.smartoffice.application.search.SearchUseCase
 import com.agbofa.smartoffice.application.decision.RejectDecisionUseCase
@@ -161,6 +162,8 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var rebuildSearchIndex: RebuildSearchIndexUseCase
         private set
+    lateinit var generateIntelligence: GenerateIntelligenceReportUseCase
+        private set
 
     override fun onCreate() {
 
@@ -273,6 +276,7 @@ class SmartOfficeApplication : Application() {
         val searchIndex = RoomSearchIndexRepository(database)
         search = SearchUseCase(searchIndex)
         rebuildSearchIndex = RebuildSearchIndexUseCase(journalTimeline, getOperationalOverviews, getDecisions, searchIndex)
+        generateIntelligence = GenerateIntelligenceReportUseCase(getOperationalOverviews, getDecisions)
     }
 }
 

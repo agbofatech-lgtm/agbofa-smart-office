@@ -6,4 +6,5 @@ enum class AppDestination(val label: String) {
     DECISION("Decision"),
     ANALYTICS("Analytics"),
     SEARCH("Search"),
+    INTELLIGENCE("Intelligence"),
 }
