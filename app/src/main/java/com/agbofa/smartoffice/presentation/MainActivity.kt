@@ -13,10 +13,10 @@ import com.agbofa.smartoffice.presentation.journal.JournalViewModel
 import com.agbofa.smartoffice.presentation.theme.SmartOfficeTheme
 
 /**
- * Phase 4 host.
+ * Phase 5 host.
  *
- * Uses the Application composition root so Capture and Journal share
- * one Room database. Compose does not classify text.
+ * Compose renders state and forwards classify selections.
+ * It does not parse text or assign meaning itself.
  */
 class MainActivity : ComponentActivity() {
     private val journalViewModel: JournalViewModel by viewModels {
@@ -28,6 +28,8 @@ class MainActivity : ComponentActivity() {
                     captureExpression = app.captureExpression,
                     admitCapture = app.admitCapture,
                     journalTimeline = app.journalTimeline,
+                    classifyJournalEntry = app.classifyJournalEntry,
+                    getActiveClassification = app.getActiveClassification,
                 ) as T
             }
         }
@@ -43,8 +45,11 @@ class MainActivity : ComponentActivity() {
                     expression = journalViewModel.expression,
                     message = journalViewModel.message,
                     records = journalViewModel.records,
+                    pendingType = journalViewModel.pendingType,
                     onExpressionChange = journalViewModel::onExpressionChange,
                     onCapture = journalViewModel::captureAndAdmit,
+                    onTypeSelected = journalViewModel::onTypeSelected,
+                    onClassify = journalViewModel::classify,
                 )
             }
         }

@@ -26,5 +26,6 @@
 - [ADR-009 Domain Foundation Primitives](adr/ADR-009-Domain-Foundation-Primitives.md)
 - [ADR-010 Capture Evidence Boundary](adr/ADR-010-Capture-Evidence-Boundary.md)
 - [ADR-011 Journal Historical Integrity](adr/ADR-011-Journal-Historical-Integrity.md)
+- [ADR-012 Classification Ownership and Provenance](adr/ADR-012-Classification-Ownership-and-Provenance.md)
 
-Phase 0–3 decisions remain locked. Phase 4 adds Journal history. Phase 5 Classification remains CLOSED.
+Phase 0–5 decisions remain locked. Phase 6 Operational Records remains CLOSED.

@@ -6,13 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [CaptureEntity::class, JournalEntryEntity::class],
-    version = 1,
+    entities = [
+        CaptureEntity::class,
+        JournalEntryEntity::class,
+        ClassificationEntity::class,
+    ],
+    version = 2,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun captureDao(): CaptureDao
     abstract fun journalEntryDao(): JournalEntryDao
+    abstract fun classificationDao(): ClassificationDao
 
     companion object {
         const val NAME = "smart-office.db"

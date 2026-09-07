@@ -33,3 +33,11 @@ value class EvaluationInstant(val value: Instant) {
 @JvmInline
 value class JournalAdmissionInstant(val value: Instant)
 
+/**
+ * When a classification revision was assigned.
+ *
+ * Distinct from capture time and journal admission time.
+ */
+@JvmInline
+value class ClassificationInstant(val value: Instant)
+

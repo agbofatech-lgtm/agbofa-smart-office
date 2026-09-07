@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,14 +21,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.R
 import com.agbofa.smartoffice.application.journal.JournalRecord
+import com.agbofa.smartoffice.domain.classification.ClassificationType
 
 @Composable
 fun JournalScreen(
     expression: String,
     message: String,
     records: List<JournalRecord>,
+    pendingType: Map<String, ClassificationType>,
     onExpressionChange: (String) -> Unit,
     onCapture: () -> Unit,
+    onTypeSelected: (String, ClassificationType) -> Unit,
+    onClassify: (String) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -79,7 +84,12 @@ fun JournalScreen(
                         items = records,
                         key = { it.entryId.value },
                     ) { record ->
-                        JournalRecordRow(record)
+                        JournalRecordRow(
+                            record = record,
+                            pending = pendingType[record.entryId.value],
+                            onTypeSelected = onTypeSelected,
+                            onClassify = onClassify,
+                        )
                     }
                 }
             }
@@ -88,16 +98,36 @@ fun JournalScreen(
 }
 
 @Composable
-private fun JournalRecordRow(record: JournalRecord) {
+private fun JournalRecordRow(
+    record: JournalRecord,
+    pending: ClassificationType?,
+    onTypeSelected: (String, ClassificationType) -> Unit,
+    onClassify: (String) -> Unit,
+) {
+    val selectable = ClassificationType.entries.filter { it != ClassificationType.UNCLASSIFIED }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = record.originalExpression.value,
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            text = "Admitted ${record.admittedAt.value}",
+            text = stringResource(
+                R.string.journal_classification_label,
+                record.classificationType.name,
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        selectable.forEach { type ->
+            OutlinedButton(onClick = { onTypeSelected(record.entryId.value, type) }) {
+                Text(type.name)
+            }
+        }
+        Button(
+            onClick = { onClassify(record.entryId.value) },
+            enabled = pending != null,
+        ) {
+            Text(stringResource(R.string.classify_action))
+        }
     }
 }

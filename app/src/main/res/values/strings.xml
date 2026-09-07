@@ -10,4 +10,8 @@
     <string name="capture_action">Capture</string>
     <string name="journal_title">Journal</string>
     <string name="journal_empty">No journal records yet.</string>
+    <string name="classify_action">Classify</string>
+    <string name="journal_classification_label">Classification: %1$s</string>
+    <string name="classification_unclassified">Unclassified</string>
+    <string name="classification_action">Classify</string>
 </resources>

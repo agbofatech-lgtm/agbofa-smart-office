@@ -5,7 +5,12 @@ import com.agbofa.smartoffice.domain.capture.CaptureId
 import com.agbofa.smartoffice.domain.capture.CaptureSource
 import com.agbofa.smartoffice.domain.capture.OriginalExpression
 import com.agbofa.smartoffice.domain.foundation.result.DomainResult
+import com.agbofa.smartoffice.domain.classification.Classification
+import com.agbofa.smartoffice.domain.classification.ClassificationBasis
+import com.agbofa.smartoffice.domain.classification.ClassificationId
+import com.agbofa.smartoffice.domain.classification.ClassificationType
 import com.agbofa.smartoffice.domain.foundation.time.CaptureInstant
+import com.agbofa.smartoffice.domain.foundation.time.ClassificationInstant
 import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
 import com.agbofa.smartoffice.domain.journal.JournalEntry
 import com.agbofa.smartoffice.domain.journal.JournalEntryId
@@ -38,4 +43,39 @@ internal fun JournalEntryEntity.toDomain(): JournalEntry? {
     val captureId = (CaptureId.of(captureId) as? DomainResult.Success)?.value ?: return null
     val admittedAt = JournalAdmissionInstant(Instant.parse(admittedAt))
     return (JournalEntry.of(id, captureId, admittedAt) as? DomainResult.Success)?.value
+}
+
+internal fun Classification.toEntity(): ClassificationEntity = ClassificationEntity(
+    id = id.value,
+    journalEntryId = journalEntryId.value,
+    type = type.name,
+    basis = basis.name,
+    classifiedAt = classifiedAt.value.toString(),
+    revision = revision,
+    ruleVersion = ruleVersion,
+    supersedesId = supersedesId?.value,
+)
+
+internal fun ClassificationEntity.toDomain(): Classification? {
+    val id = (ClassificationId.of(id) as? DomainResult.Success)?.value ?: return null
+    val journalEntryId = (JournalEntryId.of(journalEntryId) as? DomainResult.Success)?.value
+        ?: return null
+    val type = runCatching { ClassificationType.valueOf(type) }.getOrNull() ?: return null
+    val basis = runCatching { ClassificationBasis.valueOf(basis) }.getOrNull() ?: return null
+    val classifiedAt = ClassificationInstant(Instant.parse(classifiedAt))
+    val supersedes = supersedesId?.let {
+        (ClassificationId.of(it) as? DomainResult.Success)?.value
+    }
+    return (
+        Classification.of(
+            id = id,
+            journalEntryId = journalEntryId,
+            type = type,
+            basis = basis,
+            classifiedAt = classifiedAt,
+            revision = revision,
+            ruleVersion = ruleVersion,
+            supersedesId = supersedes,
+        ) as? DomainResult.Success
+        )?.value
 }
