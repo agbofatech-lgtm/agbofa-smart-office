@@ -31,6 +31,7 @@ class MainActivity : ComponentActivity() {
                     classifyJournalEntry = app.classifyJournalEntry,
                     getActiveClassification = app.getActiveClassification,
                     createOperationalRecord = app.createOperationalRecord,
+                    transitionOperationalRecordState = app.transitionOperationalRecordState,
                 ) as T
             }
         }
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
                     onTypeSelected = journalViewModel::onTypeSelected,
                     onClassify = journalViewModel::classify,
                     onCreateOperational = journalViewModel::createOperational,
+                    onTransitionState = journalViewModel::transitionState,
                 )
             }
         }

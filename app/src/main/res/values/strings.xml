@@ -17,4 +17,5 @@
     <string name="create_operational_record">Create Operational Record</string>
     <string name="operational_record_action">Create Operational Record</string>
     <string name="operational_record_exists">Operational record exists</string>
+    <string name="operational_state_label">State: %1$s</string>
 </resources>

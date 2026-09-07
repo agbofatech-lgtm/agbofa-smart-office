@@ -28,5 +28,6 @@
 - [ADR-011 Journal Historical Integrity](adr/ADR-011-Journal-Historical-Integrity.md)
 - [ADR-012 Classification Ownership and Provenance](adr/ADR-012-Classification-Ownership-and-Provenance.md)
 - [ADR-013 Operational Record Canonicalization](adr/ADR-013-Operational-Record-Canonicalization.md)
+- [ADR-014 Operational State Architecture](adr/ADR-014-Operational-State-Architecture.md)
 
-Phase 0–6 decisions remain locked. Phase 7 State Architecture remains CLOSED.
+Phase 0–6 decisions remain locked. Phase 7 adds Operational State. Phase 8 Workflow remains CLOSED.

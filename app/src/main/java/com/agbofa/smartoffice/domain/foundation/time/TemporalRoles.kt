@@ -50,3 +50,11 @@ value class ClassificationInstant(val value: Instant)
 @JvmInline
 value class OperationalCreationInstant(val value: Instant)
 
+/**
+ * When an operational state transition was recorded.
+ *
+ * Distinct from creation time. Not a due date.
+ */
+@JvmInline
+value class OperationalTransitionInstant(val value: Instant)
+

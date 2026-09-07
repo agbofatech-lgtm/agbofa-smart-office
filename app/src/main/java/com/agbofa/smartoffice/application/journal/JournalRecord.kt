@@ -6,10 +6,12 @@ import com.agbofa.smartoffice.domain.classification.ClassificationType
 import com.agbofa.smartoffice.domain.foundation.time.CaptureInstant
 import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
 import com.agbofa.smartoffice.domain.journal.JournalEntryId
+import com.agbofa.smartoffice.domain.operations.OperationalRecordId
+import com.agbofa.smartoffice.domain.operations.OperationalState
 
 /**
- * Read projection. Classification and operational existence are attached,
- * not owned as Capture or Journal truth.
+ * Read projection. Classification, operational existence, and state are
+ * attached, not owned as Capture or Journal truth.
  */
 data class JournalRecord(
     val entryId: JournalEntryId,
@@ -19,4 +21,6 @@ data class JournalRecord(
     val admittedAt: JournalAdmissionInstant,
     val classificationType: ClassificationType = ClassificationType.UNCLASSIFIED,
     val operationalRecordExists: Boolean = false,
+    val operationalRecordId: OperationalRecordId? = null,
+    val operationalState: OperationalState? = null,
 )

@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.R
 import com.agbofa.smartoffice.application.journal.JournalRecord
 import com.agbofa.smartoffice.domain.classification.ClassificationType
+import com.agbofa.smartoffice.domain.operations.OperationalState
+import com.agbofa.smartoffice.domain.operations.OperationalStatePolicy
 
 @Composable
 fun JournalScreen(
@@ -34,6 +36,7 @@ fun JournalScreen(
     onTypeSelected: (String, ClassificationType) -> Unit,
     onClassify: (String) -> Unit,
     onCreateOperational: (String) -> Unit,
+    onTransitionState: (String, OperationalState) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -63,10 +66,7 @@ fun JournalScreen(
                 Text(stringResource(R.string.capture_action))
             }
             if (message.isNotEmpty()) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                Text(text = message, style = MaterialTheme.typography.bodyMedium)
             }
             HorizontalDivider()
             if (records.isEmpty()) {
@@ -81,16 +81,14 @@ fun JournalScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(
-                        items = records,
-                        key = { it.entryId.value },
-                    ) { record ->
+                    items(records, key = { it.entryId.value }) { record ->
                         JournalRecordRow(
                             record = record,
                             pending = pendingType[record.entryId.value],
                             onTypeSelected = onTypeSelected,
                             onClassify = onClassify,
                             onCreateOperational = onCreateOperational,
+                            onTransitionState = onTransitionState,
                         )
                     }
                 }
@@ -106,6 +104,7 @@ private fun JournalRecordRow(
     onTypeSelected: (String, ClassificationType) -> Unit,
     onClassify: (String) -> Unit,
     onCreateOperational: (String) -> Unit,
+    onTransitionState: (String, OperationalState) -> Unit,
 ) {
     val selectable = ClassificationType.entries.filter { it != ClassificationType.UNCLASSIFIED }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -141,9 +140,21 @@ private fun JournalRecordRow(
         }
         if (record.operationalRecordExists) {
             Text(
-                text = stringResource(R.string.operational_record_exists),
+                text = stringResource(
+                    R.string.operational_state_label,
+                    record.operationalState?.name ?: OperationalState.OPEN.name,
+                ),
                 style = MaterialTheme.typography.bodySmall,
             )
+            val recordId = record.operationalRecordId?.value
+            val current = record.operationalState ?: OperationalState.OPEN
+            if (recordId != null) {
+                OperationalStatePolicy.successors(current).forEach { target ->
+                    OutlinedButton(onClick = { onTransitionState(recordId, target) }) {
+                        Text(target.name)
+                    }
+                }
+            }
         }
     }
 }

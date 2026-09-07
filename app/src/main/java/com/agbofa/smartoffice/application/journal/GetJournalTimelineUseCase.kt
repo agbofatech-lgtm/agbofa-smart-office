@@ -6,12 +6,15 @@ import com.agbofa.smartoffice.domain.classification.ClassificationType
 import com.agbofa.smartoffice.domain.journal.JournalEntry
 import com.agbofa.smartoffice.domain.journal.JournalRepository
 import com.agbofa.smartoffice.domain.operations.OperationalRecordRepository
+import com.agbofa.smartoffice.domain.operations.OperationalStateProjection
+import com.agbofa.smartoffice.domain.operations.OperationalStateRepository
 
 class GetJournalTimelineUseCase(
     private val captures: CaptureRepository,
     private val journal: JournalRepository,
     private val classifications: ClassificationRepository? = null,
     private val operations: OperationalRecordRepository? = null,
+    private val states: OperationalStateRepository? = null,
 ) {
     fun execute(): List<JournalRecord> {
         return journal.listAll()
@@ -25,7 +28,12 @@ class GetJournalTimelineUseCase(
             ?.findActiveByJournalEntryId(entry.id)
             ?.type
             ?: ClassificationType.UNCLASSIFIED
-        val operational = operations?.findByJournalEntryId(entry.id) != null
+        val record = operations?.findByJournalEntryId(entry.id)
+        val state = record?.let { existing ->
+            states?.let { repo ->
+                OperationalStateProjection.current(repo.listByOperationalRecordId(existing.id))
+            } ?: com.agbofa.smartoffice.domain.operations.OperationalState.OPEN
+        }
         return JournalRecord(
             entryId = entry.id,
             captureId = entry.captureId,
@@ -33,7 +41,9 @@ class GetJournalTimelineUseCase(
             capturedAt = capture.capturedAt,
             admittedAt = entry.admittedAt,
             classificationType = type,
-            operationalRecordExists = operational,
+            operationalRecordExists = record != null,
+            operationalRecordId = record?.id,
+            operationalState = state,
         )
     }
 

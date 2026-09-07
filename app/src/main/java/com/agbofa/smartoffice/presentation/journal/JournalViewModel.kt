@@ -12,6 +12,10 @@ import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
 import com.agbofa.smartoffice.application.journal.JournalRecord
 import com.agbofa.smartoffice.application.operations.CreateOperationalRecordUseCase
+import com.agbofa.smartoffice.application.operations.TransitionOperationalRecordStateUseCase
+import com.agbofa.smartoffice.domain.foundation.time.OperationalTransitionInstant
+import com.agbofa.smartoffice.domain.operations.OperationalState
+import com.agbofa.smartoffice.domain.operations.OperationalTransitionBasis
 import com.agbofa.smartoffice.domain.classification.Classification
 import com.agbofa.smartoffice.domain.classification.ClassificationBasis
 import com.agbofa.smartoffice.domain.classification.ClassificationType
@@ -35,6 +39,7 @@ class JournalViewModel(
     private val classifyJournalEntry: ClassifyJournalEntryUseCase,
     private val getActiveClassification: GetActiveClassificationUseCase,
     private val createOperationalRecord: CreateOperationalRecordUseCase,
+    private val transitionOperationalRecordState: TransitionOperationalRecordStateUseCase,
 ) : ViewModel() {
     var expression by mutableStateOf("")
         private set
@@ -127,6 +132,23 @@ class JournalViewModel(
         )
         message = when (result) {
             is DomainResult.Success -> "Operational record created"
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
+    fun transitionState(operationalRecordId: String, toState: OperationalState) {
+        val sequence = nextSequence
+        nextSequence += 1
+        val result = transitionOperationalRecordState.execute(
+            transitionId = "st-$sequence",
+            operationalRecordIdValue = operationalRecordId,
+            toState = toState,
+            transitionedAt = OperationalTransitionInstant(Instant.now()),
+            basis = OperationalTransitionBasis.MANUAL,
+        )
+        message = when (result) {
+            is DomainResult.Success -> "State ${result.value.fromState} → ${result.value.toState}"
             is DomainResult.Failure -> result.error.message
         }
         refresh()

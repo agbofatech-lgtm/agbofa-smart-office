@@ -5,6 +5,11 @@ import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import com.agbofa.smartoffice.domain.operations.OperationalRecord
 import com.agbofa.smartoffice.domain.operations.OperationalRecordId
 import com.agbofa.smartoffice.domain.operations.OperationalRecordType
+import com.agbofa.smartoffice.domain.operations.OperationalState
+import com.agbofa.smartoffice.domain.operations.OperationalStateTransition
+import com.agbofa.smartoffice.domain.operations.OperationalStateTransitionId
+import com.agbofa.smartoffice.domain.operations.OperationalTransitionBasis
+import com.agbofa.smartoffice.domain.foundation.time.OperationalTransitionInstant
 import com.agbofa.smartoffice.domain.foundation.time.OperationalCreationInstant
 import com.agbofa.smartoffice.domain.capture.CaptureId
 import com.agbofa.smartoffice.domain.capture.CaptureSource
@@ -111,6 +116,35 @@ internal fun OperationalRecordEntity.toDomain(): OperationalRecord? {
         type = type,
         createdAt = OperationalCreationInstant(Instant.parse(createdAt)),
         creationBasis = basis,
+        ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun OperationalStateTransition.toEntity(): OperationalStateTransitionEntity =
+    OperationalStateTransitionEntity(
+        id = id.value,
+        operationalRecordId = operationalRecordId.value,
+        fromState = fromState.name,
+        toState = toState.name,
+        transitionedAt = transitionedAt.value.toString(),
+        basis = basis.name,
+        ruleVersion = ruleVersion,
+    )
+
+internal fun OperationalStateTransitionEntity.toDomain(): OperationalStateTransition? {
+    val id = (OperationalStateTransitionId.of(id) as? DomainResult.Success)?.value ?: return null
+    val recordId = (OperationalRecordId.of(operationalRecordId) as? DomainResult.Success)?.value
+        ?: return null
+    val from = runCatching { OperationalState.valueOf(fromState) }.getOrNull() ?: return null
+    val to = runCatching { OperationalState.valueOf(toState) }.getOrNull() ?: return null
+    val basis = runCatching { OperationalTransitionBasis.valueOf(basis) }.getOrNull() ?: return null
+    return (OperationalStateTransition.of(
+        id = id,
+        operationalRecordId = recordId,
+        fromState = from,
+        toState = to,
+        transitionedAt = OperationalTransitionInstant(Instant.parse(transitionedAt)),
+        basis = basis,
         ruleVersion = ruleVersion,
     ) as? DomainResult.Success)?.value
 }
