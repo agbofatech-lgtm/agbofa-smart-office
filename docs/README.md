@@ -33,5 +33,6 @@
 - [ADR-016 Deterministic Workflow Architecture](adr/ADR-016-Deterministic-Workflow-Architecture.md)
 - [ADR-017 Deterministic Rules Architecture](adr/ADR-017-Deterministic-Rules-Architecture.md)
 - [ADR-018 Deterministic Integrity Architecture](adr/ADR-018-Deterministic-Integrity-Architecture.md)
+- [ADR-019 Deterministic Operational Projection Architecture](adr/ADR-019-Deterministic-Operational-Projection-Architecture.md)
 
-Phase 0–11 decisions remain locked. Phase 12 Analytics remains CLOSED.
+Phase 0–12 decisions remain locked. Phase 13 Analytics remains CLOSED.

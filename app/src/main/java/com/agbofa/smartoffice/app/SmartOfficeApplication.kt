@@ -6,6 +6,8 @@ import com.agbofa.smartoffice.application.classification.ClassifyJournalEntryUse
 import com.agbofa.smartoffice.application.classification.GetActiveClassificationUseCase
 import com.agbofa.smartoffice.application.classification.GetUnclassifiedJournalEntriesUseCase
 import com.agbofa.smartoffice.application.integrity.EvaluateIntegrityUseCase
+import com.agbofa.smartoffice.application.projection.GetOperationalOverviewUseCase
+import com.agbofa.smartoffice.application.projection.GetOperationalOverviewsUseCase
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
 import com.agbofa.smartoffice.application.operations.AssignOperationalTemporalUseCase
@@ -108,6 +110,10 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var evaluateIntegrity: EvaluateIntegrityUseCase
         private set
+    lateinit var getOperationalOverview: GetOperationalOverviewUseCase
+        private set
+    lateinit var getOperationalOverviews: GetOperationalOverviewsUseCase
+        private set
 
     override fun onCreate() {
 
@@ -168,5 +174,21 @@ class SmartOfficeApplication : Application() {
             workflowTransitions,
             rules,
         )
+        getOperationalOverview = GetOperationalOverviewUseCase(
+            operations,
+            journal,
+            captures,
+            classifications,
+            states,
+            temporals,
+            getOperationalPrerequisites,
+            getOperationalDependents,
+            workflowRepo,
+            workflowSteps,
+            workflowTransitions,
+            evaluateIntegrity,
+        )
+        getOperationalOverviews = GetOperationalOverviewsUseCase(operations, getOperationalOverview)
     }
 }
+
