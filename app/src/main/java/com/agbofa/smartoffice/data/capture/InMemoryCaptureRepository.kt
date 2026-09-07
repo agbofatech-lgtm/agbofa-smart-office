@@ -8,12 +8,13 @@ import com.agbofa.smartoffice.domain.foundation.result.DomainResult
 /**
  * Process-local capture store.
  *
- * Phase 3 does not introduce Room. This implementation is offline and
- * has no network dependency. It does not rewrite stored expressions.
+ * Used by unit tests. Production wiring uses Room.
+ * An injected map lets tests recreate the repository and still
+ * observe previously saved records (restart simulation).
  */
-class InMemoryCaptureRepository : CaptureRepository {
-    private val records = LinkedHashMap<String, Capture>()
-
+class InMemoryCaptureRepository(
+    private val records: MutableMap<String, Capture> = LinkedHashMap(),
+) : CaptureRepository {
     override fun save(capture: Capture): DomainResult<Capture> {
         records[capture.id.value] = capture
         return DomainResult.Success(capture)

@@ -15,3 +15,7 @@
 *.class
 google-services.json
 local.properties
+
+*.db
+*.db-shm
+*.db-wal

@@ -29,3 +29,7 @@ value class TransitionInstant(val value: Instant)
 value class EvaluationInstant(val value: Instant) {
     fun hasReached(due: DueInstant): Boolean = !value.isBefore(due.value)
 }
+
+@JvmInline
+value class JournalAdmissionInstant(val value: Instant)
+

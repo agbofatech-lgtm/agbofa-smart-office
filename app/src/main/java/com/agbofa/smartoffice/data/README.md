@@ -1,9 +1,11 @@
-
 # data
 
 Local persistence adapters and repository implementations.
 
-Phase 3: `InMemoryCaptureRepository` only.
+Phase 4:
 
-Room schema is deferred. Do not add Database.kt, DAOs, or tables for
-tasks, finance, journal, or workflows.
+- `InMemoryCaptureRepository` / `InMemoryJournalRepository` for unit tests
+- Room `captures` and `journal_entries` for production
+
+No tables for tasks, finance, classification, or workflows.
+Domain models are mapped to entities here. Room types do not leave data/.

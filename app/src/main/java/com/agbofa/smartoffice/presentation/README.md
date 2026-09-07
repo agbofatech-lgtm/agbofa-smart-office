@@ -1,9 +1,7 @@
-
 # presentation
 
 Compose screens, theme, navigation host.
 
-Phase 3 contents: MainActivity hosts `CaptureScreen`.
+Phase 4: `JournalScreen` captures text and lists `JournalRecord`s.
 
-The screen collects text and displays a use-case result string.
-It does not classify, calculate money, or schedule.
+The screen does not classify, calculate money, or schedule.

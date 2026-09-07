@@ -20,4 +20,8 @@ sealed class DomainError {
     data class InvalidState(
         override val message: String,
     ) : DomainError()
+
+    data class PersistenceFailure(
+        override val message: String,
+    ) : DomainError()
 }

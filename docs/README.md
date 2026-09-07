@@ -25,5 +25,6 @@
 - [ADR-008 Time and Temporal Modeling](adr/ADR-008-Time-and-Temporal-Modeling.md)
 - [ADR-009 Domain Foundation Primitives](adr/ADR-009-Domain-Foundation-Primitives.md)
 - [ADR-010 Capture Evidence Boundary](adr/ADR-010-Capture-Evidence-Boundary.md)
+- [ADR-011 Journal Historical Integrity](adr/ADR-011-Journal-Historical-Integrity.md)
 
-Phase 0–2 decisions remain locked. Phase 3 adds Capture evidence only. Phases 4–16 remain CLOSED.
+Phase 0–3 decisions remain locked. Phase 4 adds Journal history. Phase 5 Classification remains CLOSED.

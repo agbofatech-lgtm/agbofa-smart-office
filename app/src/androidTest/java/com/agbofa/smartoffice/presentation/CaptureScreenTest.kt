@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 import org.junit.Test
 
 /**
- * Phase 3 instrumentation source. Not executed here (no Android SDK).
+ * Phase 4 instrumentation source. Not executed here (no Android SDK).
  */
 @RunWith(AndroidJUnit4::class)
 class CaptureScreenTest {
@@ -17,8 +17,9 @@ class CaptureScreenTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun captureScreenShowsInputAndAction() {
-        composeRule.onNodeWithText("Capture").assertIsDisplayed()
+    fun journalScreenShowsCaptureAndTimeline() {
+        composeRule.onNodeWithText("Journal").assertIsDisplayed()
         composeRule.onNodeWithText("Expression").assertIsDisplayed()
+        composeRule.onNodeWithText("Capture").assertIsDisplayed()
     }
 }
