@@ -14,6 +14,17 @@ import com.agbofa.smartoffice.domain.operations.TemporalCreationBasis
 import com.agbofa.smartoffice.domain.operations.TemporalResolution
 import java.time.LocalDateTime
 import java.time.ZoneId
+import com.agbofa.smartoffice.domain.foundation.time.WorkflowCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.WorkflowTransitionInstant
+import com.agbofa.smartoffice.domain.workflow.Workflow
+import com.agbofa.smartoffice.domain.workflow.WorkflowBasis
+import com.agbofa.smartoffice.domain.workflow.WorkflowId
+import com.agbofa.smartoffice.domain.workflow.WorkflowStep
+import com.agbofa.smartoffice.domain.workflow.WorkflowStepId
+import com.agbofa.smartoffice.domain.workflow.WorkflowStepStatus
+import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransition
+import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransitionId
+import com.agbofa.smartoffice.domain.workflow.WorkflowTransitionBasis
 import com.agbofa.smartoffice.domain.capture.Capture
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import com.agbofa.smartoffice.domain.operations.OperationalRecord
@@ -227,6 +238,68 @@ internal fun OperationalDependencyEntity.toDomain(): OperationalDependency? {
         prerequisiteOperationalRecordId = prerequisite,
         type = type,
         createdAt = OperationalDependencyCreationInstant(Instant.parse(createdAt)),
+        basis = basis,
+        ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun Workflow.toEntity(): WorkflowEntity = WorkflowEntity(
+    id = id.value,
+    operationalRecordId = operationalRecordId.value,
+    createdAt = createdAt.value.toString(),
+    basis = basis.name,
+    ruleVersion = ruleVersion,
+)
+
+internal fun WorkflowEntity.toDomain(): Workflow? {
+    val id = (WorkflowId.of(id) as? DomainResult.Success)?.value ?: return null
+    val recordId = (OperationalRecordId.of(operationalRecordId) as? DomainResult.Success)?.value ?: return null
+    val basis = runCatching { WorkflowBasis.valueOf(basis) }.getOrNull() ?: return null
+    return (Workflow.of(
+        id = id,
+        operationalRecordId = recordId,
+        createdAt = WorkflowCreationInstant(Instant.parse(createdAt)),
+        basis = basis,
+        ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun WorkflowStep.toEntity(): WorkflowStepEntity = WorkflowStepEntity(
+    id = id.value,
+    workflowId = workflowId.value,
+    ordinal = ordinal,
+    key = key,
+    label = label,
+)
+
+internal fun WorkflowStepEntity.toDomain(): WorkflowStep? {
+    val id = (WorkflowStepId.of(id) as? DomainResult.Success)?.value ?: return null
+    val workflowId = (WorkflowId.of(workflowId) as? DomainResult.Success)?.value ?: return null
+    return (WorkflowStep.of(id, workflowId, ordinal, key, label) as? DomainResult.Success)?.value
+}
+
+internal fun WorkflowStepTransition.toEntity(): WorkflowStepTransitionEntity = WorkflowStepTransitionEntity(
+    id = id.value,
+    workflowStepId = workflowStepId.value,
+    fromStatus = fromStatus.name,
+    toStatus = toStatus.name,
+    transitionedAt = transitionedAt.value.toString(),
+    basis = basis.name,
+    ruleVersion = ruleVersion,
+)
+
+internal fun WorkflowStepTransitionEntity.toDomain(): WorkflowStepTransition? {
+    val id = (WorkflowStepTransitionId.of(id) as? DomainResult.Success)?.value ?: return null
+    val stepId = (WorkflowStepId.of(workflowStepId) as? DomainResult.Success)?.value ?: return null
+    val from = runCatching { WorkflowStepStatus.valueOf(fromStatus) }.getOrNull() ?: return null
+    val to = runCatching { WorkflowStepStatus.valueOf(toStatus) }.getOrNull() ?: return null
+    val basis = runCatching { WorkflowTransitionBasis.valueOf(basis) }.getOrNull() ?: return null
+    return (WorkflowStepTransition.of(
+        id = id,
+        workflowStepId = stepId,
+        fromStatus = from,
+        toStatus = to,
+        transitionedAt = WorkflowTransitionInstant(Instant.parse(transitionedAt)),
         basis = basis,
         ruleVersion = ruleVersion,
     ) as? DomainResult.Success)?.value

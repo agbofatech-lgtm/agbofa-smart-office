@@ -25,6 +25,16 @@ import com.agbofa.smartoffice.data.persistence.RoomOperationalDependencyReposito
 import com.agbofa.smartoffice.data.persistence.RoomOperationalRecordRepository
 import com.agbofa.smartoffice.data.persistence.RoomOperationalTemporalRepository
 import com.agbofa.smartoffice.data.persistence.RoomOperationalStateRepository
+import com.agbofa.smartoffice.application.workflow.AdvanceWorkflowUseCase
+import com.agbofa.smartoffice.application.workflow.CreateWorkflowUseCase
+import com.agbofa.smartoffice.application.workflow.GetWorkflowForOperationalRecordUseCase
+import com.agbofa.smartoffice.application.workflow.GetWorkflowHistoryUseCase
+import com.agbofa.smartoffice.application.workflow.GetWorkflowStepsUseCase
+import com.agbofa.smartoffice.application.workflow.GetWorkflowUseCase
+import com.agbofa.smartoffice.application.workflow.TransitionWorkflowStepUseCase
+import com.agbofa.smartoffice.data.persistence.RoomWorkflowRepository
+import com.agbofa.smartoffice.data.persistence.RoomWorkflowStepRepository
+import com.agbofa.smartoffice.data.persistence.RoomWorkflowStepTransitionRepository
 import com.agbofa.smartoffice.data.persistence.SmartOfficeDatabase
 
 class SmartOfficeApplication : Application() {
@@ -64,6 +74,20 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var getOperationalDependents: GetOperationalDependentsUseCase
         private set
+    lateinit var createWorkflow: CreateWorkflowUseCase
+        private set
+    lateinit var getWorkflow: GetWorkflowUseCase
+        private set
+    lateinit var getWorkflowForOperationalRecord: GetWorkflowForOperationalRecordUseCase
+        private set
+    lateinit var getWorkflowSteps: GetWorkflowStepsUseCase
+        private set
+    lateinit var transitionWorkflowStep: TransitionWorkflowStepUseCase
+        private set
+    lateinit var advanceWorkflow: AdvanceWorkflowUseCase
+        private set
+    lateinit var getWorkflowHistory: GetWorkflowHistoryUseCase
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -94,5 +118,15 @@ class SmartOfficeApplication : Application() {
         createOperationalDependency = CreateOperationalDependencyUseCase(operations, dependencies)
         getOperationalPrerequisites = GetOperationalPrerequisitesUseCase(dependencies)
         getOperationalDependents = GetOperationalDependentsUseCase(dependencies)
+        val workflowRepo = RoomWorkflowRepository(database.workflowDao())
+        val workflowSteps = RoomWorkflowStepRepository(database.workflowStepDao())
+        val workflowTransitions = RoomWorkflowStepTransitionRepository(database.workflowStepTransitionDao())
+        createWorkflow = CreateWorkflowUseCase(operations, workflowRepo, workflowSteps)
+        getWorkflow = GetWorkflowUseCase(workflowRepo)
+        getWorkflowForOperationalRecord = GetWorkflowForOperationalRecordUseCase(workflowRepo)
+        getWorkflowSteps = GetWorkflowStepsUseCase(workflowSteps)
+        transitionWorkflowStep = TransitionWorkflowStepUseCase(workflowSteps, workflowTransitions)
+        advanceWorkflow = AdvanceWorkflowUseCase(workflowRepo, workflowSteps, transitionWorkflowStep, workflowTransitions)
+        getWorkflowHistory = GetWorkflowHistoryUseCase(workflowSteps, workflowTransitions)
     }
 }

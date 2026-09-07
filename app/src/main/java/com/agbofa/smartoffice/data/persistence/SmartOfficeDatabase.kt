@@ -16,8 +16,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         OperationalStateTransitionEntity::class,
         OperationalTemporalRecordEntity::class,
         OperationalDependencyEntity::class,
+        WorkflowEntity::class,
+        WorkflowStepEntity::class,
+        WorkflowStepTransitionEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -28,6 +31,9 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun operationalStateTransitionDao(): OperationalStateTransitionDao
     abstract fun operationalTemporalRecordDao(): OperationalTemporalRecordDao
     abstract fun operationalDependencyDao(): OperationalDependencyDao
+    abstract fun workflowDao(): WorkflowDao
+    abstract fun workflowStepDao(): WorkflowStepDao
+    abstract fun workflowStepTransitionDao(): WorkflowStepTransitionDao
 
     companion object {
         const val NAME = "smart-office.db"
@@ -140,13 +146,77 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflows (
+                        id TEXT NOT NULL,
+                        operationalRecordId TEXT NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        ruleVersion TEXT,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(operationalRecordId) REFERENCES operational_records(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_workflows_operationalRecordId ON workflows(operationalRecordId)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflow_steps (
+                        id TEXT NOT NULL,
+                        workflowId TEXT NOT NULL,
+                        ordinal INTEGER NOT NULL,
+                        key TEXT NOT NULL,
+                        label TEXT NOT NULL,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(workflowId) REFERENCES workflows(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_workflow_steps_workflowId_ordinal ON workflow_steps(workflowId, ordinal)",
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_workflow_steps_workflowId_key ON workflow_steps(workflowId, key)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_workflow_steps_workflowId ON workflow_steps(workflowId)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflow_step_transitions (
+                        id TEXT NOT NULL,
+                        workflowStepId TEXT NOT NULL,
+                        fromStatus TEXT NOT NULL,
+                        toStatus TEXT NOT NULL,
+                        transitionedAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        ruleVersion TEXT,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(workflowStepId) REFERENCES workflow_steps(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_workflow_step_transitions_workflowStepId ON workflow_step_transitions(workflowStepId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_workflow_step_transitions_transitionedAt ON workflow_step_transitions(transitionedAt)",
+                )
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 SmartOfficeDatabase::class.java,
                 NAME,
             )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build()

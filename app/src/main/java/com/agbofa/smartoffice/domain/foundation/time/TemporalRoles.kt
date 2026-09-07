@@ -74,3 +74,11 @@ value class TemporalAssignmentInstant(val value: Instant)
 @JvmInline
 value class OperationalDependencyCreationInstant(val value: Instant)
 
+/** When a workflow instance was created. */
+@JvmInline
+value class WorkflowCreationInstant(val value: Instant)
+
+/** When a workflow step transition was recorded. */
+@JvmInline
+value class WorkflowTransitionInstant(val value: Instant)
+
