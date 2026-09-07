@@ -27,7 +27,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SearchIndexEntity::class,
     ],
     version = 9,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun captureDao(): CaptureDao
@@ -375,6 +375,9 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                 )
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_search_index_type ON search_index(type)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_search_index_entityId ON search_index(entityId)")
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_search_index_type_entityId ON search_index(type, entityId)",
+                )
             }
         }
 

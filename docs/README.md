@@ -51,3 +51,4 @@ Phase 0–18 decisions remain locked. Phase 19 AI remains CLOSED.
 - `docs/architecture/AI_BOUNDARY.md`
 - `docs/architecture/PHASE_14_RISK_REGISTER.md`
 - `docs/architecture/PHASE_15_FORWARD_ARCHITECTURE.md`
+- [ADR-026 Migration Hardening and Schema Export](adr/ADR-026-Migration-Hardening-and-Schema-Export.md)
