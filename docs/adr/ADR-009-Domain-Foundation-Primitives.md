@@ -32,7 +32,7 @@ Use one-line role wrappers around `Instant` so capture, event, due, schedule, tr
 
 Domain decision functions receive `EvaluationInstant` through `EvaluationContext`. They do not call `Instant.now()`, `LocalDateTime.now()`, or `System.currentTimeMillis()`.
 
-`DomainClock` exists only as an edge port that mints `EvaluationInstant`. Decision functions take `EvaluationInstant` or `EvaluationContext`, not the clock.
+No clock port lives in the domain in Phase 2. If a later phase needs a clock, it belongs at the application edge and may only mint an `EvaluationInstant` before calling domain code.
 
 ### Result and error
 
