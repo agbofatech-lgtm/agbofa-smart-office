@@ -33,6 +33,7 @@ fun JournalScreen(
     onCapture: () -> Unit,
     onTypeSelected: (String, ClassificationType) -> Unit,
     onClassify: (String) -> Unit,
+    onCreateOperational: (String) -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -89,6 +90,7 @@ fun JournalScreen(
                             pending = pendingType[record.entryId.value],
                             onTypeSelected = onTypeSelected,
                             onClassify = onClassify,
+                            onCreateOperational = onCreateOperational,
                         )
                     }
                 }
@@ -103,6 +105,7 @@ private fun JournalRecordRow(
     pending: ClassificationType?,
     onTypeSelected: (String, ClassificationType) -> Unit,
     onClassify: (String) -> Unit,
+    onCreateOperational: (String) -> Unit,
 ) {
     val selectable = ClassificationType.entries.filter { it != ClassificationType.UNCLASSIFIED }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -128,6 +131,19 @@ private fun JournalRecordRow(
             enabled = pending != null,
         ) {
             Text(stringResource(R.string.classify_action))
+        }
+        if (record.classificationType != ClassificationType.UNCLASSIFIED &&
+            !record.operationalRecordExists
+        ) {
+            Button(onClick = { onCreateOperational(record.entryId.value) }) {
+                Text(stringResource(R.string.create_operational_record))
+            }
+        }
+        if (record.operationalRecordExists) {
+            Text(
+                text = stringResource(R.string.operational_record_exists),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

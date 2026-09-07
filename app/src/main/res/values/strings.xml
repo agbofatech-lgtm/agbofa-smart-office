@@ -14,4 +14,7 @@
     <string name="journal_classification_label">Classification: %1$s</string>
     <string name="classification_unclassified">Unclassified</string>
     <string name="classification_action">Classify</string>
+    <string name="create_operational_record">Create Operational Record</string>
+    <string name="operational_record_action">Create Operational Record</string>
+    <string name="operational_record_exists">Operational record exists</string>
 </resources>

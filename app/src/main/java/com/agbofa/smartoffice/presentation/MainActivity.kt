@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
                     journalTimeline = app.journalTimeline,
                     classifyJournalEntry = app.classifyJournalEntry,
                     getActiveClassification = app.getActiveClassification,
+                    createOperationalRecord = app.createOperationalRecord,
                 ) as T
             }
         }
@@ -50,6 +51,7 @@ class MainActivity : ComponentActivity() {
                     onCapture = journalViewModel::captureAndAdmit,
                     onTypeSelected = journalViewModel::onTypeSelected,
                     onClassify = journalViewModel::classify,
+                    onCreateOperational = journalViewModel::createOperational,
                 )
             }
         }

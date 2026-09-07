@@ -5,11 +5,13 @@ import com.agbofa.smartoffice.domain.classification.ClassificationRepository
 import com.agbofa.smartoffice.domain.classification.ClassificationType
 import com.agbofa.smartoffice.domain.journal.JournalEntry
 import com.agbofa.smartoffice.domain.journal.JournalRepository
+import com.agbofa.smartoffice.domain.operations.OperationalRecordRepository
 
 class GetJournalTimelineUseCase(
     private val captures: CaptureRepository,
     private val journal: JournalRepository,
     private val classifications: ClassificationRepository? = null,
+    private val operations: OperationalRecordRepository? = null,
 ) {
     fun execute(): List<JournalRecord> {
         return journal.listAll()
@@ -23,6 +25,7 @@ class GetJournalTimelineUseCase(
             ?.findActiveByJournalEntryId(entry.id)
             ?.type
             ?: ClassificationType.UNCLASSIFIED
+        val operational = operations?.findByJournalEntryId(entry.id) != null
         return JournalRecord(
             entryId = entry.id,
             captureId = entry.captureId,
@@ -30,6 +33,7 @@ class GetJournalTimelineUseCase(
             capturedAt = capture.capturedAt,
             admittedAt = entry.admittedAt,
             classificationType = type,
+            operationalRecordExists = operational,
         )
     }
 

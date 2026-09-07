@@ -27,5 +27,6 @@
 - [ADR-010 Capture Evidence Boundary](adr/ADR-010-Capture-Evidence-Boundary.md)
 - [ADR-011 Journal Historical Integrity](adr/ADR-011-Journal-Historical-Integrity.md)
 - [ADR-012 Classification Ownership and Provenance](adr/ADR-012-Classification-Ownership-and-Provenance.md)
+- [ADR-013 Operational Record Canonicalization](adr/ADR-013-Operational-Record-Canonicalization.md)
 
-Phase 0–5 decisions remain locked. Phase 6 Operational Records remains CLOSED.
+Phase 0–6 decisions remain locked. Phase 7 State Architecture remains CLOSED.

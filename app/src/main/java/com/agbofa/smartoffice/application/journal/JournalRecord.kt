@@ -8,7 +8,8 @@ import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
 import com.agbofa.smartoffice.domain.journal.JournalEntryId
 
 /**
- * Read projection. Classification is attached, not owned as Capture truth.
+ * Read projection. Classification and operational existence are attached,
+ * not owned as Capture or Journal truth.
  */
 data class JournalRecord(
     val entryId: JournalEntryId,
@@ -17,4 +18,5 @@ data class JournalRecord(
     val capturedAt: CaptureInstant,
     val admittedAt: JournalAdmissionInstant,
     val classificationType: ClassificationType = ClassificationType.UNCLASSIFIED,
+    val operationalRecordExists: Boolean = false,
 )

@@ -41,3 +41,12 @@ value class JournalAdmissionInstant(val value: Instant)
 @JvmInline
 value class ClassificationInstant(val value: Instant)
 
+/**
+ * When a structured operational record was created.
+ *
+ * Distinct from capture, journal admission, and classification time.
+ * Not a due date or schedule instant.
+ */
+@JvmInline
+value class OperationalCreationInstant(val value: Instant)
+

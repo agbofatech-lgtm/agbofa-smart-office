@@ -7,17 +7,15 @@ import com.agbofa.smartoffice.application.classification.GetActiveClassification
 import com.agbofa.smartoffice.application.classification.GetUnclassifiedJournalEntriesUseCase
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
+import com.agbofa.smartoffice.application.operations.CreateOperationalRecordUseCase
+import com.agbofa.smartoffice.application.operations.GetOperationalRecordForJournalEntryUseCase
+import com.agbofa.smartoffice.application.operations.GetOperationalRecordUseCase
 import com.agbofa.smartoffice.data.persistence.RoomCaptureRepository
 import com.agbofa.smartoffice.data.persistence.RoomClassificationRepository
 import com.agbofa.smartoffice.data.persistence.RoomJournalRepository
+import com.agbofa.smartoffice.data.persistence.RoomOperationalRecordRepository
 import com.agbofa.smartoffice.data.persistence.SmartOfficeDatabase
 
-/**
- * Production composition root.
- *
- * Wires Room-backed Capture, Journal, and Classification repositories.
- * No network, no sync, no AI.
- */
 class SmartOfficeApplication : Application() {
     lateinit var database: SmartOfficeDatabase
         private set
@@ -33,6 +31,12 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var getUnclassifiedJournalEntries: GetUnclassifiedJournalEntriesUseCase
         private set
+    lateinit var createOperationalRecord: CreateOperationalRecordUseCase
+        private set
+    lateinit var getOperationalRecord: GetOperationalRecordUseCase
+        private set
+    lateinit var getOperationalRecordForJournalEntry: GetOperationalRecordForJournalEntryUseCase
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -40,11 +44,15 @@ class SmartOfficeApplication : Application() {
         val captures = RoomCaptureRepository(database.captureDao())
         val journal = RoomJournalRepository(database.journalEntryDao())
         val classifications = RoomClassificationRepository(database.classificationDao())
+        val operations = RoomOperationalRecordRepository(database.operationalRecordDao())
         captureExpression = CaptureExpressionUseCase(captures)
         admitCapture = AdmitCaptureToJournalUseCase(captures, journal)
-        journalTimeline = GetJournalTimelineUseCase(captures, journal, classifications)
+        journalTimeline = GetJournalTimelineUseCase(captures, journal, classifications, operations)
         classifyJournalEntry = ClassifyJournalEntryUseCase(journal, classifications)
         getActiveClassification = GetActiveClassificationUseCase(classifications)
         getUnclassifiedJournalEntries = GetUnclassifiedJournalEntriesUseCase(journal, classifications)
+        createOperationalRecord = CreateOperationalRecordUseCase(journal, classifications, operations)
+        getOperationalRecord = GetOperationalRecordUseCase(operations)
+        getOperationalRecordForJournalEntry = GetOperationalRecordForJournalEntryUseCase(operations)
     }
 }

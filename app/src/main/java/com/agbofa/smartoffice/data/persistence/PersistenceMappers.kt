@@ -1,6 +1,11 @@
 package com.agbofa.smartoffice.data.persistence
 
 import com.agbofa.smartoffice.domain.capture.Capture
+import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
+import com.agbofa.smartoffice.domain.operations.OperationalRecord
+import com.agbofa.smartoffice.domain.operations.OperationalRecordId
+import com.agbofa.smartoffice.domain.operations.OperationalRecordType
+import com.agbofa.smartoffice.domain.foundation.time.OperationalCreationInstant
 import com.agbofa.smartoffice.domain.capture.CaptureId
 import com.agbofa.smartoffice.domain.capture.CaptureSource
 import com.agbofa.smartoffice.domain.capture.OriginalExpression
@@ -79,3 +84,34 @@ internal fun ClassificationEntity.toDomain(): Classification? {
         ) as? DomainResult.Success
         )?.value
 }
+
+internal fun OperationalRecord.toEntity(): OperationalRecordEntity = OperationalRecordEntity(
+    id = id.value,
+    journalEntryId = journalEntryId.value,
+    classificationId = classificationId.value,
+    type = type.name,
+    createdAt = createdAt.value.toString(),
+    creationBasis = creationBasis.name,
+    ruleVersion = ruleVersion,
+)
+
+internal fun OperationalRecordEntity.toDomain(): OperationalRecord? {
+    val id = (OperationalRecordId.of(id) as? DomainResult.Success)?.value ?: return null
+    val journalEntryId = (JournalEntryId.of(journalEntryId) as? DomainResult.Success)?.value
+        ?: return null
+    val classificationId = (ClassificationId.of(classificationId) as? DomainResult.Success)?.value
+        ?: return null
+    val type = runCatching { OperationalRecordType.valueOf(type) }.getOrNull() ?: return null
+    val basis = runCatching { OperationalCreationBasis.valueOf(creationBasis) }.getOrNull()
+        ?: return null
+    return (OperationalRecord.of(
+        id = id,
+        journalEntryId = journalEntryId,
+        classificationId = classificationId,
+        type = type,
+        createdAt = OperationalCreationInstant(Instant.parse(createdAt)),
+        creationBasis = basis,
+        ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+

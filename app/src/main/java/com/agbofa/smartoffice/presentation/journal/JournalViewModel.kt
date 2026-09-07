@@ -11,6 +11,7 @@ import com.agbofa.smartoffice.application.classification.GetActiveClassification
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
 import com.agbofa.smartoffice.application.journal.JournalRecord
+import com.agbofa.smartoffice.application.operations.CreateOperationalRecordUseCase
 import com.agbofa.smartoffice.domain.classification.Classification
 import com.agbofa.smartoffice.domain.classification.ClassificationBasis
 import com.agbofa.smartoffice.domain.classification.ClassificationType
@@ -18,10 +19,12 @@ import com.agbofa.smartoffice.domain.foundation.result.DomainResult
 import com.agbofa.smartoffice.domain.foundation.time.CaptureInstant
 import com.agbofa.smartoffice.domain.foundation.time.ClassificationInstant
 import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
+import com.agbofa.smartoffice.domain.foundation.time.OperationalCreationInstant
+import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import java.time.Instant
 
 /**
- * Coordinates capture, journal, and classification use cases.
+ * Coordinates capture, journal, classification, and explicit operationalization.
  *
  * Does not parse text, create tasks, or create finance records.
  */
@@ -31,6 +34,7 @@ class JournalViewModel(
     private val journalTimeline: GetJournalTimelineUseCase,
     private val classifyJournalEntry: ClassifyJournalEntryUseCase,
     private val getActiveClassification: GetActiveClassificationUseCase,
+    private val createOperationalRecord: CreateOperationalRecordUseCase,
 ) : ViewModel() {
     var expression by mutableStateOf("")
         private set
@@ -45,6 +49,7 @@ class JournalViewModel(
     val pendingType: Map<String, ClassificationType> get() = draftTypes
     private var nextSequence by mutableIntStateOf(1)
     private var nextClassification by mutableIntStateOf(1)
+    private var nextOperational by mutableIntStateOf(1)
 
     fun onExpressionChange(value: String) {
         expression = value
@@ -84,9 +89,7 @@ class JournalViewModel(
                 admittedAt = JournalAdmissionInstant(now),
             )
         ) {
-            is DomainResult.Failure -> {
-                message = admitted.error.message
-            }
+            is DomainResult.Failure -> message = admitted.error.message
             is DomainResult.Success -> {
                 message = "Admitted"
                 expression = ""
@@ -108,6 +111,22 @@ class JournalViewModel(
         )
         message = when (result) {
             is DomainResult.Success -> "Classified as ${result.value.type.name}"
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
+    fun createOperational(journalEntryId: String) {
+        val id = "op-$nextOperational"
+        nextOperational += 1
+        val result = createOperationalRecord.execute(
+            operationalRecordId = id,
+            journalEntryIdValue = journalEntryId,
+            createdAt = OperationalCreationInstant(Instant.now()),
+            creationBasis = OperationalCreationBasis.MANUAL,
+        )
+        message = when (result) {
+            is DomainResult.Success -> "Operational record created"
             is DomainResult.Failure -> result.error.message
         }
         refresh()
