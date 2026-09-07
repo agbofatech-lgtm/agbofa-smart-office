@@ -14,8 +14,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ClassificationEntity::class,
         OperationalRecordEntity::class,
         OperationalStateTransitionEntity::class,
+        OperationalTemporalRecordEntity::class,
+        OperationalDependencyEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -24,6 +26,8 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun classificationDao(): ClassificationDao
     abstract fun operationalRecordDao(): OperationalRecordDao
     abstract fun operationalStateTransitionDao(): OperationalStateTransitionDao
+    abstract fun operationalTemporalRecordDao(): OperationalTemporalRecordDao
+    abstract fun operationalDependencyDao(): OperationalDependencyDao
 
     companion object {
         const val NAME = "smart-office.db"
@@ -81,13 +85,68 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS operational_temporal_records (
+                        id TEXT NOT NULL,
+                        operationalRecordId TEXT NOT NULL,
+                        resolution TEXT NOT NULL,
+                        referenceExpression TEXT,
+                        dueInstant TEXT,
+                        civilDateTime TEXT,
+                        civilZone TEXT,
+                        basis TEXT NOT NULL,
+                        ruleVersion TEXT,
+                        assignedAt TEXT NOT NULL,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(operationalRecordId) REFERENCES operational_records(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_operational_temporal_records_operationalRecordId ON operational_temporal_records(operationalRecordId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_operational_temporal_records_assignedAt ON operational_temporal_records(assignedAt)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS operational_dependencies (
+                        id TEXT NOT NULL,
+                        dependentOperationalRecordId TEXT NOT NULL,
+                        prerequisiteOperationalRecordId TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        ruleVersion TEXT,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(dependentOperationalRecordId) REFERENCES operational_records(id) ON DELETE RESTRICT,
+                        FOREIGN KEY(prerequisiteOperationalRecordId) REFERENCES operational_records(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_operational_dependencies_pair ON operational_dependencies(dependentOperationalRecordId, prerequisiteOperationalRecordId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_operational_dependencies_dependentOperationalRecordId ON operational_dependencies(dependentOperationalRecordId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_operational_dependencies_prerequisiteOperationalRecordId ON operational_dependencies(prerequisiteOperationalRecordId)",
+                )
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 SmartOfficeDatabase::class.java,
                 NAME,
             )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build()

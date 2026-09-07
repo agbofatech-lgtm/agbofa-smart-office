@@ -1,5 +1,19 @@
 package com.agbofa.smartoffice.data.persistence
 
+import com.agbofa.smartoffice.domain.foundation.time.CivilTime
+import com.agbofa.smartoffice.domain.foundation.time.DueInstant
+import com.agbofa.smartoffice.domain.foundation.time.OperationalDependencyCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.TemporalAssignmentInstant
+import com.agbofa.smartoffice.domain.operations.OperationalDependency
+import com.agbofa.smartoffice.domain.operations.OperationalDependencyBasis
+import com.agbofa.smartoffice.domain.operations.OperationalDependencyId
+import com.agbofa.smartoffice.domain.operations.OperationalDependencyType
+import com.agbofa.smartoffice.domain.operations.OperationalTemporalId
+import com.agbofa.smartoffice.domain.operations.OperationalTemporalRecord
+import com.agbofa.smartoffice.domain.operations.TemporalCreationBasis
+import com.agbofa.smartoffice.domain.operations.TemporalResolution
+import java.time.LocalDateTime
+import java.time.ZoneId
 import com.agbofa.smartoffice.domain.capture.Capture
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import com.agbofa.smartoffice.domain.operations.OperationalRecord
@@ -144,6 +158,75 @@ internal fun OperationalStateTransitionEntity.toDomain(): OperationalStateTransi
         fromState = from,
         toState = to,
         transitionedAt = OperationalTransitionInstant(Instant.parse(transitionedAt)),
+        basis = basis,
+        ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun OperationalTemporalRecord.toEntity(): OperationalTemporalRecordEntity =
+    OperationalTemporalRecordEntity(
+        id = id.value,
+        operationalRecordId = operationalRecordId.value,
+        resolution = resolution.name,
+        referenceExpression = referenceExpression,
+        dueInstant = dueInstant?.value?.toString(),
+        civilDateTime = civilTime?.dateTime?.toString(),
+        civilZone = civilTime?.zone?.id,
+        basis = basis.name,
+        ruleVersion = ruleVersion,
+        assignedAt = assignedAt.value.toString(),
+    )
+
+internal fun OperationalTemporalRecordEntity.toDomain(): OperationalTemporalRecord? {
+    val id = (OperationalTemporalId.of(id) as? DomainResult.Success)?.value ?: return null
+    val recordId = (OperationalRecordId.of(operationalRecordId) as? DomainResult.Success)?.value
+        ?: return null
+    val resolution = runCatching { TemporalResolution.valueOf(resolution) }.getOrNull() ?: return null
+    val basis = runCatching { TemporalCreationBasis.valueOf(basis) }.getOrNull() ?: return null
+    val due = dueInstant?.let { DueInstant(Instant.parse(it)) }
+    val civil = if (civilDateTime != null && civilZone != null) {
+        CivilTime(LocalDateTime.parse(civilDateTime), ZoneId.of(civilZone))
+    } else {
+        null
+    }
+    return (OperationalTemporalRecord.of(
+        id = id,
+        operationalRecordId = recordId,
+        resolution = resolution,
+        referenceExpression = referenceExpression,
+        dueInstant = due,
+        civilTime = civil,
+        basis = basis,
+        ruleVersion = ruleVersion,
+        assignedAt = TemporalAssignmentInstant(Instant.parse(assignedAt)),
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun OperationalDependency.toEntity(): OperationalDependencyEntity =
+    OperationalDependencyEntity(
+        id = id.value,
+        dependentOperationalRecordId = dependentOperationalRecordId.value,
+        prerequisiteOperationalRecordId = prerequisiteOperationalRecordId.value,
+        type = type.name,
+        createdAt = createdAt.value.toString(),
+        basis = basis.name,
+        ruleVersion = ruleVersion,
+    )
+
+internal fun OperationalDependencyEntity.toDomain(): OperationalDependency? {
+    val id = (OperationalDependencyId.of(id) as? DomainResult.Success)?.value ?: return null
+    val dependent = (OperationalRecordId.of(dependentOperationalRecordId) as? DomainResult.Success)?.value
+        ?: return null
+    val prerequisite = (OperationalRecordId.of(prerequisiteOperationalRecordId) as? DomainResult.Success)?.value
+        ?: return null
+    val type = runCatching { OperationalDependencyType.valueOf(type) }.getOrNull() ?: return null
+    val basis = runCatching { OperationalDependencyBasis.valueOf(basis) }.getOrNull() ?: return null
+    return (OperationalDependency.of(
+        id = id,
+        dependentOperationalRecordId = dependent,
+        prerequisiteOperationalRecordId = prerequisite,
+        type = type,
+        createdAt = OperationalDependencyCreationInstant(Instant.parse(createdAt)),
         basis = basis,
         ruleVersion = ruleVersion,
     ) as? DomainResult.Success)?.value

@@ -58,3 +58,19 @@ value class OperationalCreationInstant(val value: Instant)
 @JvmInline
 value class OperationalTransitionInstant(val value: Instant)
 
+/**
+ * When temporal information was assigned to an OperationalRecord.
+ *
+ * Distinct from DueInstant and EvaluationInstant.
+ */
+@JvmInline
+value class TemporalAssignmentInstant(val value: Instant)
+
+/**
+ * When an operational dependency was recorded.
+ *
+ * Distinct from operational creation and state transition time.
+ */
+@JvmInline
+value class OperationalDependencyCreationInstant(val value: Instant)
+

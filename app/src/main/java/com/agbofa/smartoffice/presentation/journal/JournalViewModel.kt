@@ -11,7 +11,12 @@ import com.agbofa.smartoffice.application.classification.GetActiveClassification
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
 import com.agbofa.smartoffice.application.journal.JournalRecord
+import com.agbofa.smartoffice.application.operations.AssignOperationalTemporalUseCase
+import com.agbofa.smartoffice.application.operations.CreateOperationalDependencyUseCase
 import com.agbofa.smartoffice.application.operations.CreateOperationalRecordUseCase
+import com.agbofa.smartoffice.application.operations.EvaluateDueStatusUseCase
+import com.agbofa.smartoffice.application.operations.GetOperationalPrerequisitesUseCase
+import com.agbofa.smartoffice.application.operations.GetOperationalTemporalUseCase
 import com.agbofa.smartoffice.application.operations.TransitionOperationalRecordStateUseCase
 import com.agbofa.smartoffice.domain.foundation.time.OperationalTransitionInstant
 import com.agbofa.smartoffice.domain.operations.OperationalState
@@ -23,7 +28,14 @@ import com.agbofa.smartoffice.domain.foundation.result.DomainResult
 import com.agbofa.smartoffice.domain.foundation.time.CaptureInstant
 import com.agbofa.smartoffice.domain.foundation.time.ClassificationInstant
 import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
+import com.agbofa.smartoffice.domain.foundation.time.DueInstant
+import com.agbofa.smartoffice.domain.foundation.time.EvaluationInstant
 import com.agbofa.smartoffice.domain.foundation.time.OperationalCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.OperationalDependencyCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.TemporalAssignmentInstant
+import com.agbofa.smartoffice.domain.operations.OperationalTemporalRecord
+import com.agbofa.smartoffice.domain.operations.TemporalResolution
+import com.agbofa.smartoffice.domain.operations.DueStatus
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import java.time.Instant
 
@@ -40,6 +52,11 @@ class JournalViewModel(
     private val getActiveClassification: GetActiveClassificationUseCase,
     private val createOperationalRecord: CreateOperationalRecordUseCase,
     private val transitionOperationalRecordState: TransitionOperationalRecordStateUseCase,
+    private val assignOperationalTemporal: AssignOperationalTemporalUseCase,
+    private val getOperationalTemporal: GetOperationalTemporalUseCase,
+    private val evaluateDueStatus: EvaluateDueStatusUseCase,
+    private val createOperationalDependency: CreateOperationalDependencyUseCase,
+    private val getOperationalPrerequisites: GetOperationalPrerequisitesUseCase,
 ) : ViewModel() {
     var expression by mutableStateOf("")
         private set
@@ -55,6 +72,20 @@ class JournalViewModel(
     private var nextSequence by mutableIntStateOf(1)
     private var nextClassification by mutableIntStateOf(1)
     private var nextOperational by mutableIntStateOf(1)
+    private var nextTemporal by mutableIntStateOf(1)
+    private var nextDependency by mutableIntStateOf(1)
+    var dueDrafts by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+    var referenceDrafts by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+    var prerequisiteDrafts by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+    var temporals by mutableStateOf<Map<String, OperationalTemporalRecord>>(emptyMap())
+        private set
+    var dueStatuses by mutableStateOf<Map<String, DueStatus>>(emptyMap())
+        private set
+    var prerequisiteLabels by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
 
     fun onExpressionChange(value: String) {
         expression = value
@@ -154,10 +185,105 @@ class JournalViewModel(
         refresh()
     }
 
+    fun onDueDraftChange(operationalRecordId: String, value: String) {
+        dueDrafts = dueDrafts + (operationalRecordId to value)
+    }
+
+    fun onReferenceDraftChange(operationalRecordId: String, value: String) {
+        referenceDrafts = referenceDrafts + (operationalRecordId to value)
+    }
+
+    fun onPrerequisiteDraftChange(operationalRecordId: String, value: String) {
+        prerequisiteDrafts = prerequisiteDrafts + (operationalRecordId to value)
+    }
+
+    fun assignDue(operationalRecordId: String) {
+        val raw = dueDrafts[operationalRecordId].orEmpty()
+        val instant = runCatching { Instant.parse(raw.trim()) }.getOrNull()
+        if (instant == null) {
+            message = "Due must be an explicit ISO-8601 instant"
+            return
+        }
+        val result = assignOperationalTemporal.execute(
+            temporalId = "tmp-$nextTemporal",
+            operationalRecordIdValue = operationalRecordId,
+            resolution = TemporalResolution.RESOLVED,
+            assignedAt = TemporalAssignmentInstant(Instant.now()),
+            dueInstant = DueInstant(instant),
+        )
+        nextTemporal += 1
+        message = when (result) {
+            is DomainResult.Success -> "Due assigned"
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
+    fun assignUnresolved(operationalRecordId: String) {
+        val result = assignOperationalTemporal.execute(
+            temporalId = "tmp-$nextTemporal",
+            operationalRecordIdValue = operationalRecordId,
+            resolution = TemporalResolution.UNRESOLVED,
+            assignedAt = TemporalAssignmentInstant(Instant.now()),
+            referenceExpression = referenceDrafts[operationalRecordId],
+        )
+        nextTemporal += 1
+        message = when (result) {
+            is DomainResult.Success -> "Unresolved temporal reference stored"
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
+    fun evaluateDue(operationalRecordId: String) {
+        val id = com.agbofa.smartoffice.domain.operations.OperationalRecordId.of(operationalRecordId)
+        if (id !is DomainResult.Success) {
+            message = "Invalid operational record id"
+            return
+        }
+        val result = evaluateDueStatus.execute(id.value, EvaluationInstant(Instant.now()))
+        message = when (result) {
+            is DomainResult.Success -> result.value.name
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
+    fun createDependency(dependentId: String) {
+        val prerequisite = prerequisiteDrafts[dependentId].orEmpty()
+        val result = createOperationalDependency.execute(
+            dependencyId = "dep-$nextDependency",
+            dependentIdValue = dependentId,
+            prerequisiteIdValue = prerequisite,
+            createdAt = OperationalDependencyCreationInstant(Instant.now()),
+        )
+        nextDependency += 1
+        message = when (result) {
+            is DomainResult.Success -> "Dependency created"
+            is DomainResult.Failure -> result.error.message
+        }
+        refresh()
+    }
+
     fun refresh() {
         records = journalTimeline.execute()
         classifications = records.mapNotNull { record ->
             getActiveClassification.execute(record.entryId)?.let { record.entryId.value to it }
         }.toMap()
+        val operationalIds = records.mapNotNull { it.operationalRecordId }
+        temporals = operationalIds.mapNotNull { id ->
+            getOperationalTemporal.execute(id)?.let { id.value to it }
+        }.toMap()
+        dueStatuses = operationalIds.mapNotNull { id ->
+            when (val result = evaluateDueStatus.execute(id, EvaluationInstant(Instant.now()))) {
+                is DomainResult.Success -> id.value to result.value
+                is DomainResult.Failure -> null
+            }
+        }.toMap()
+        prerequisiteLabels = operationalIds.associate { id ->
+            val labels = getOperationalPrerequisites.execute(id)
+                .joinToString { it.prerequisiteOperationalRecordId.value }
+            id.value to labels
+        }
     }
 }

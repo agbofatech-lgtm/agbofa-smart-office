@@ -32,6 +32,11 @@ class MainActivity : ComponentActivity() {
                     getActiveClassification = app.getActiveClassification,
                     createOperationalRecord = app.createOperationalRecord,
                     transitionOperationalRecordState = app.transitionOperationalRecordState,
+                    assignOperationalTemporal = app.assignOperationalTemporal,
+                    getOperationalTemporal = app.getOperationalTemporal,
+                    evaluateDueStatus = app.evaluateDueStatus,
+                    createOperationalDependency = app.createOperationalDependency,
+                    getOperationalPrerequisites = app.getOperationalPrerequisites,
                 ) as T
             }
         }
@@ -54,6 +59,19 @@ class MainActivity : ComponentActivity() {
                     onClassify = journalViewModel::classify,
                     onCreateOperational = journalViewModel::createOperational,
                     onTransitionState = journalViewModel::transitionState,
+                    temporals = journalViewModel.temporals,
+                    dueStatuses = journalViewModel.dueStatuses,
+                    prerequisiteLabels = journalViewModel.prerequisiteLabels,
+                    dueDrafts = journalViewModel.dueDrafts,
+                    referenceDrafts = journalViewModel.referenceDrafts,
+                    prerequisiteDrafts = journalViewModel.prerequisiteDrafts,
+                    onDueDraftChange = journalViewModel::onDueDraftChange,
+                    onReferenceDraftChange = journalViewModel::onReferenceDraftChange,
+                    onPrerequisiteDraftChange = journalViewModel::onPrerequisiteDraftChange,
+                    onAssignDue = journalViewModel::assignDue,
+                    onAssignUnresolved = journalViewModel::assignUnresolved,
+                    onEvaluateDue = journalViewModel::evaluateDue,
+                    onCreateDependency = journalViewModel::createDependency,
                 )
             }
         }
