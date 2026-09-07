@@ -7,6 +7,7 @@ interface WorkflowRepository {
     fun save(workflow: Workflow): DomainResult<Workflow>
     fun findById(id: WorkflowId): Workflow?
     fun findByOperationalRecordId(operationalRecordId: OperationalRecordId): Workflow?
+    fun listAll(): List<Workflow>
 }
 
 interface WorkflowStepRepository {

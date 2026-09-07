@@ -33,6 +33,9 @@ class InMemoryWorkflowRepository : WorkflowRepository {
 
     override fun findByOperationalRecordId(operationalRecordId: OperationalRecordId): Workflow? =
         byId.values.firstOrNull { it.operationalRecordId == operationalRecordId }
+
+    override fun listAll(): List<Workflow> =
+        byId.values.sortedBy { it.id.value }
 }
 
 class InMemoryWorkflowStepRepository : WorkflowStepRepository {

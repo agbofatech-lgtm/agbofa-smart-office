@@ -37,6 +37,9 @@ class RoomWorkflowRepository(
 
     override fun findByOperationalRecordId(operationalRecordId: OperationalRecordId): Workflow? =
         dao.findByOperationalRecordId(operationalRecordId.value)?.toDomain()
+
+    override fun listAll(): List<Workflow> =
+        dao.list().mapNotNull { it.toDomain() }.sortedBy { it.id.value }
 }
 
 class RoomWorkflowStepRepository(

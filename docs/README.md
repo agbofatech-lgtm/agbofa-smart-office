@@ -32,5 +32,6 @@
 - [ADR-015 Temporal and Dependency Architecture](adr/ADR-015-Temporal-and-Dependency-Architecture.md)
 - [ADR-016 Deterministic Workflow Architecture](adr/ADR-016-Deterministic-Workflow-Architecture.md)
 - [ADR-017 Deterministic Rules Architecture](adr/ADR-017-Deterministic-Rules-Architecture.md)
+- [ADR-018 Deterministic Integrity Architecture](adr/ADR-018-Deterministic-Integrity-Architecture.md)
 
-Phase 0–10 decisions remain locked. Phase 11 Integrity remains CLOSED.
+Phase 0–11 decisions remain locked. Phase 12 Analytics remains CLOSED.

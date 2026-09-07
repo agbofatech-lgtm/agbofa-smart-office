@@ -15,6 +15,9 @@ interface WorkflowDao {
 
     @Query("SELECT * FROM workflows WHERE operationalRecordId = :operationalRecordId LIMIT 1")
     fun findByOperationalRecordId(operationalRecordId: String): WorkflowEntity?
+
+    @Query("SELECT * FROM workflows")
+    fun list(): List<WorkflowEntity>
 }
 
 @Dao
