@@ -23,5 +23,6 @@
 - [ADR-006 Intelligence Advisory Boundary](adr/ADR-006-Intelligence-Advisory-Boundary.md)
 - [ADR-007 Domain Data Ownership](adr/ADR-007-Domain-Data-Ownership.md)
 - [ADR-008 Time and Temporal Modeling](adr/ADR-008-Time-and-Temporal-Modeling.md)
+- [ADR-009 Domain Foundation Primitives](adr/ADR-009-Domain-Foundation-Primitives.md)
 
-Phase 0 decisions remain locked. Phase 1 is the repository foundation only. Phases 2–16 and all product features remain CLOSED.
+Phase 0 decisions remain locked. Phase 1 is the repository foundation. Phase 2 adds domain primitives only. Phases 3–16 and all product features remain CLOSED.

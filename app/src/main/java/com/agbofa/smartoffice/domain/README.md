@@ -1,10 +1,18 @@
 # domain
 
-Phase 1 boundary only.
+Deterministic product truth. Pure Kotlin.
 
-Future home of deterministic product truth.
+Phase 2 authorized contents live under `foundation/`:
 
-Phase 1 rule:
-- no Android / Compose / Room / Hilt / WorkManager types
-- no Journal, Operations, Finance, State, or Intelligence classes
-- empty boundary is required; speculative interfaces are forbidden
+- identity
+- time
+- result
+- error
+- event
+- context
+
+This package must never depend on Android, Compose, Room, WorkManager,
+Hilt, Retrofit, Firebase, or network APIs.
+
+Do not add Journal, Task, Finance, or Workflow types until the owning
+phase is authorized.
