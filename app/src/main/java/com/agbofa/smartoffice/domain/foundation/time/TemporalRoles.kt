@@ -82,3 +82,11 @@ value class WorkflowCreationInstant(val value: Instant)
 @JvmInline
 value class WorkflowTransitionInstant(val value: Instant)
 
+/**
+ * When a rule version was recorded.
+ *
+ * Distinct from evaluation time. Not a due or schedule instant.
+ */
+@JvmInline
+value class RuleCreationInstant(val value: Instant)
+

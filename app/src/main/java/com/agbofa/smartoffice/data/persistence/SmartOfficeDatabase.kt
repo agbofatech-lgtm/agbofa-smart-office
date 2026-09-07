@@ -19,8 +19,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WorkflowEntity::class,
         WorkflowStepEntity::class,
         WorkflowStepTransitionEntity::class,
+        RuleEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -34,6 +35,7 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun workflowDao(): WorkflowDao
     abstract fun workflowStepDao(): WorkflowStepDao
     abstract fun workflowStepTransitionDao(): WorkflowStepTransitionDao
+    abstract fun ruleDao(): RuleDao
 
     companion object {
         const val NAME = "smart-office.db"
@@ -210,13 +212,36 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS rules (
+                        id TEXT NOT NULL,
+                        version TEXT NOT NULL,
+                        key TEXT NOT NULL,
+                        condition TEXT NOT NULL,
+                        decision TEXT NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        PRIMARY KEY(id, version)
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_rules_key ON rules(key)",
+                )
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 SmartOfficeDatabase::class.java,
                 NAME,
             )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build()

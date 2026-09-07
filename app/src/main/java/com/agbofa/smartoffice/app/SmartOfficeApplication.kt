@@ -31,6 +31,12 @@ import com.agbofa.smartoffice.application.workflow.GetWorkflowForOperationalReco
 import com.agbofa.smartoffice.application.workflow.GetWorkflowHistoryUseCase
 import com.agbofa.smartoffice.application.workflow.GetWorkflowStepsUseCase
 import com.agbofa.smartoffice.application.workflow.GetWorkflowUseCase
+import com.agbofa.smartoffice.application.rules.CreateRuleUseCase
+import com.agbofa.smartoffice.application.rules.EvaluateRuleSetUseCase
+import com.agbofa.smartoffice.application.rules.EvaluateRuleUseCase
+import com.agbofa.smartoffice.application.rules.GetRuleUseCase
+import com.agbofa.smartoffice.application.rules.GetRuleVersionUseCase
+import com.agbofa.smartoffice.data.persistence.RoomRuleRepository
 import com.agbofa.smartoffice.application.workflow.TransitionWorkflowStepUseCase
 import com.agbofa.smartoffice.data.persistence.RoomWorkflowRepository
 import com.agbofa.smartoffice.data.persistence.RoomWorkflowStepRepository
@@ -89,7 +95,19 @@ class SmartOfficeApplication : Application() {
     lateinit var getWorkflowHistory: GetWorkflowHistoryUseCase
         private set
 
+    lateinit var createRule: CreateRuleUseCase
+        private set
+    lateinit var getRule: GetRuleUseCase
+        private set
+    lateinit var getRuleVersion: GetRuleVersionUseCase
+        private set
+    lateinit var evaluateRule: EvaluateRuleUseCase
+        private set
+    lateinit var evaluateRuleSet: EvaluateRuleSetUseCase
+        private set
+
     override fun onCreate() {
+
         super.onCreate()
         database = SmartOfficeDatabase.create(this)
         val captures = RoomCaptureRepository(database.captureDao())
@@ -99,6 +117,7 @@ class SmartOfficeApplication : Application() {
         val states = RoomOperationalStateRepository(database.operationalStateTransitionDao())
         val temporals = RoomOperationalTemporalRepository(database.operationalTemporalRecordDao())
         val dependencies = RoomOperationalDependencyRepository(database.operationalDependencyDao())
+        val rules = RoomRuleRepository(database.ruleDao())
         captureExpression = CaptureExpressionUseCase(captures)
         admitCapture = AdmitCaptureToJournalUseCase(captures, journal)
         journalTimeline = GetJournalTimelineUseCase(
@@ -112,6 +131,11 @@ class SmartOfficeApplication : Application() {
         transitionOperationalRecordState = TransitionOperationalRecordStateUseCase(operations, states)
         getOperationalRecordState = GetOperationalRecordStateUseCase(states)
         getOperationalStateHistory = GetOperationalStateHistoryUseCase(states)
+        createRule = CreateRuleUseCase(rules)
+        getRule = GetRuleUseCase(rules)
+        getRuleVersion = GetRuleVersionUseCase(rules)
+        evaluateRule = EvaluateRuleUseCase(rules)
+        evaluateRuleSet = EvaluateRuleSetUseCase(rules)
         assignOperationalTemporal = AssignOperationalTemporalUseCase(operations, temporals)
         getOperationalTemporal = GetOperationalTemporalUseCase(temporals)
         evaluateDueStatus = EvaluateDueStatusUseCase(temporals)

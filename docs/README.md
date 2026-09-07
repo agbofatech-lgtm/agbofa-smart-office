@@ -31,5 +31,6 @@
 - [ADR-014 Operational State Architecture](adr/ADR-014-Operational-State-Architecture.md)
 - [ADR-015 Temporal and Dependency Architecture](adr/ADR-015-Temporal-and-Dependency-Architecture.md)
 - [ADR-016 Deterministic Workflow Architecture](adr/ADR-016-Deterministic-Workflow-Architecture.md)
+- [ADR-017 Deterministic Rules Architecture](adr/ADR-017-Deterministic-Rules-Architecture.md)
 
-Phase 0–8 decisions remain locked. Phase 9 adds Workflow. Phase 10 Rules remain CLOSED.
+Phase 0–10 decisions remain locked. Phase 11 Integrity remains CLOSED.

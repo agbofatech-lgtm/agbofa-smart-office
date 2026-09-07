@@ -1,5 +1,13 @@
 package com.agbofa.smartoffice.data.persistence
 
+import com.agbofa.smartoffice.data.rules.RuleConditionCodec
+import com.agbofa.smartoffice.data.rules.RuleDecisionCodec
+import com.agbofa.smartoffice.domain.foundation.time.RuleCreationInstant
+import com.agbofa.smartoffice.domain.rules.Rule
+import com.agbofa.smartoffice.domain.rules.RuleDefinitionBasis
+import com.agbofa.smartoffice.domain.rules.RuleId
+import com.agbofa.smartoffice.domain.rules.RuleVersion
+
 import com.agbofa.smartoffice.domain.foundation.time.CivilTime
 import com.agbofa.smartoffice.domain.foundation.time.DueInstant
 import com.agbofa.smartoffice.domain.foundation.time.OperationalDependencyCreationInstant
@@ -302,6 +310,34 @@ internal fun WorkflowStepTransitionEntity.toDomain(): WorkflowStepTransition? {
         transitionedAt = WorkflowTransitionInstant(Instant.parse(transitionedAt)),
         basis = basis,
         ruleVersion = ruleVersion,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun Rule.toEntity(): RuleEntity =
+    RuleEntity(
+        id = id.value,
+        version = version.value,
+        key = key,
+        condition = RuleConditionCodec.encode(condition),
+        decision = RuleDecisionCodec.encode(decision),
+        createdAt = createdAt.value.toString(),
+        basis = basis.name,
+    )
+
+internal fun RuleEntity.toDomain(): Rule? {
+    val id = (RuleId.of(id) as? DomainResult.Success)?.value ?: return null
+    val version = (RuleVersion.of(version) as? DomainResult.Success)?.value ?: return null
+    val condition = RuleConditionCodec.decode(condition) ?: return null
+    val decision = RuleDecisionCodec.decode(decision) ?: return null
+    val basis = runCatching { RuleDefinitionBasis.valueOf(basis) }.getOrNull() ?: return null
+    return (Rule.of(
+        id = id,
+        version = version,
+        key = key,
+        condition = condition,
+        decision = decision,
+        createdAt = RuleCreationInstant(Instant.parse(createdAt)),
+        basis = basis,
     ) as? DomainResult.Success)?.value
 }
 
