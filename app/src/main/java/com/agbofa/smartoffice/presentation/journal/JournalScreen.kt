@@ -52,9 +52,10 @@ fun JournalScreen(
     onAssignUnresolved: (String) -> Unit = {},
     onEvaluateDue: (String) -> Unit = {},
     onCreateDependency: (String) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(

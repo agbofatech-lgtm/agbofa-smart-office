@@ -5,75 +5,136 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.agbofa.smartoffice.app.SmartOfficeApplication
+import com.agbofa.smartoffice.domain.foundation.context.EvaluationContext
+import com.agbofa.smartoffice.domain.foundation.time.EvaluationInstant
+import com.agbofa.smartoffice.presentation.analytics.AnalyticsScreen
+import com.agbofa.smartoffice.presentation.analytics.AnalyticsViewModel
+import com.agbofa.smartoffice.presentation.dashboard.DashboardScreen
+import com.agbofa.smartoffice.presentation.dashboard.DashboardViewModel
+import com.agbofa.smartoffice.presentation.decision.DecisionScreen
+import com.agbofa.smartoffice.presentation.decision.DecisionViewModel
 import com.agbofa.smartoffice.presentation.journal.JournalScreen
 import com.agbofa.smartoffice.presentation.journal.JournalViewModel
+import com.agbofa.smartoffice.presentation.navigation.AppDestination
+import com.agbofa.smartoffice.presentation.navigation.SmartOfficeScaffold
 import com.agbofa.smartoffice.presentation.theme.SmartOfficeTheme
+import java.time.Instant
 
-/**
- * Phase 5 host.
- *
- * Compose renders state and forwards classify selections.
- * It does not parse text or assign meaning itself.
- */
 class MainActivity : ComponentActivity() {
-    private val journalViewModel: JournalViewModel by viewModels {
-        val app = application as SmartOfficeApplication
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return JournalViewModel(
-                    captureExpression = app.captureExpression,
-                    admitCapture = app.admitCapture,
-                    journalTimeline = app.journalTimeline,
-                    classifyJournalEntry = app.classifyJournalEntry,
-                    getActiveClassification = app.getActiveClassification,
-                    createOperationalRecord = app.createOperationalRecord,
-                    transitionOperationalRecordState = app.transitionOperationalRecordState,
-                    assignOperationalTemporal = app.assignOperationalTemporal,
-                    getOperationalTemporal = app.getOperationalTemporal,
-                    evaluateDueStatus = app.evaluateDueStatus,
-                    createOperationalDependency = app.createOperationalDependency,
-                    getOperationalPrerequisites = app.getOperationalPrerequisites,
-                ) as T
-            }
+    private val app: SmartOfficeApplication
+        get() = application as SmartOfficeApplication
+
+    private val journalViewModel: JournalViewModel by viewModels { factory { journalVm() } }
+    private val dashboardViewModel: DashboardViewModel by viewModels {
+        factory { DashboardViewModel(app.getOperationalOverviews, app.getOperationalAnalytics) }
+    }
+    private val decisionViewModel: DecisionViewModel by viewModels {
+        factory {
+            DecisionViewModel(
+                app.getDecisions,
+                app.approveDecision,
+                app.rejectDecision,
+                app.withdrawDecision,
+            )
         }
+    }
+    private val analyticsViewModel: AnalyticsViewModel by viewModels {
+        factory { AnalyticsViewModel(app.getOperationalAnalytics) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         journalViewModel.refresh()
+        val context = edgeContext()
+        dashboardViewModel.refresh(context)
+        decisionViewModel.refresh()
+        analyticsViewModel.refresh(context)
         enableEdgeToEdge()
         setContent {
             SmartOfficeTheme {
-                JournalScreen(
-                    expression = journalViewModel.expression,
-                    message = journalViewModel.message,
-                    records = journalViewModel.records,
-                    pendingType = journalViewModel.pendingType,
-                    onExpressionChange = journalViewModel::onExpressionChange,
-                    onCapture = journalViewModel::captureAndAdmit,
-                    onTypeSelected = journalViewModel::onTypeSelected,
-                    onClassify = journalViewModel::classify,
-                    onCreateOperational = journalViewModel::createOperational,
-                    onTransitionState = journalViewModel::transitionState,
-                    temporals = journalViewModel.temporals,
-                    dueStatuses = journalViewModel.dueStatuses,
-                    prerequisiteLabels = journalViewModel.prerequisiteLabels,
-                    dueDrafts = journalViewModel.dueDrafts,
-                    referenceDrafts = journalViewModel.referenceDrafts,
-                    prerequisiteDrafts = journalViewModel.prerequisiteDrafts,
-                    onDueDraftChange = journalViewModel::onDueDraftChange,
-                    onReferenceDraftChange = journalViewModel::onReferenceDraftChange,
-                    onPrerequisiteDraftChange = journalViewModel::onPrerequisiteDraftChange,
-                    onAssignDue = journalViewModel::assignDue,
-                    onAssignUnresolved = journalViewModel::assignUnresolved,
-                    onEvaluateDue = journalViewModel::evaluateDue,
-                    onCreateDependency = journalViewModel::createDependency,
-                )
+                var destination by rememberSaveable { mutableStateOf(AppDestination.JOURNAL.name) }
+                val selected = AppDestination.valueOf(destination)
+                SmartOfficeScaffold(destination = selected, onDestination = { destination = it.name }) { modifier ->
+                    when (selected) {
+                        AppDestination.JOURNAL -> JournalScreen(
+                            expression = journalViewModel.expression,
+                            message = journalViewModel.message,
+                            records = journalViewModel.records,
+                            pendingType = journalViewModel.pendingType,
+                            onExpressionChange = journalViewModel::onExpressionChange,
+                            onCapture = journalViewModel::captureAndAdmit,
+                            onTypeSelected = journalViewModel::onTypeSelected,
+                            onClassify = journalViewModel::classify,
+                            onCreateOperational = journalViewModel::createOperational,
+                            onTransitionState = journalViewModel::transitionState,
+                            temporals = journalViewModel.temporals,
+                            dueStatuses = journalViewModel.dueStatuses,
+                            prerequisiteLabels = journalViewModel.prerequisiteLabels,
+                            dueDrafts = journalViewModel.dueDrafts,
+                            referenceDrafts = journalViewModel.referenceDrafts,
+                            prerequisiteDrafts = journalViewModel.prerequisiteDrafts,
+                            onDueDraftChange = journalViewModel::onDueDraftChange,
+                            onReferenceDraftChange = journalViewModel::onReferenceDraftChange,
+                            onPrerequisiteDraftChange = journalViewModel::onPrerequisiteDraftChange,
+                            onAssignDue = journalViewModel::assignDue,
+                            onAssignUnresolved = journalViewModel::assignUnresolved,
+                            onEvaluateDue = journalViewModel::evaluateDue,
+                            onCreateDependency = journalViewModel::createDependency,
+                            modifier = modifier,
+                        )
+                        AppDestination.DASHBOARD -> DashboardScreen(
+                            state = dashboardViewModel.state,
+                            onRefresh = { dashboardViewModel.refresh(edgeContext()) },
+                            modifier = modifier,
+                        )
+                        AppDestination.DECISION -> DecisionScreen(
+                            state = decisionViewModel.state,
+                            onRefresh = decisionViewModel::refresh,
+                            onApprove = { id -> decisionViewModel.approve(id, Instant.now()) },
+                            onReject = { id -> decisionViewModel.reject(id, Instant.now()) },
+                            onWithdraw = { id -> decisionViewModel.withdraw(id, Instant.now()) },
+                            modifier = modifier,
+                        )
+                        AppDestination.ANALYTICS -> AnalyticsScreen(
+                            state = analyticsViewModel.state,
+                            onRefresh = { analyticsViewModel.refresh(edgeContext()) },
+                            modifier = modifier,
+                        )) },
+                            modifier = modifier,
+                        )
+                    }
+                }
             }
         }
     }
+
+    private fun edgeContext() = EvaluationContext(EvaluationInstant(Instant.now()))
+
+    private fun journalVm() = JournalViewModel(
+        captureExpression = app.captureExpression,
+        admitCapture = app.admitCapture,
+        journalTimeline = app.journalTimeline,
+        classifyJournalEntry = app.classifyJournalEntry,
+        getActiveClassification = app.getActiveClassification,
+        createOperationalRecord = app.createOperationalRecord,
+        transitionOperationalRecordState = app.transitionOperationalRecordState,
+        assignOperationalTemporal = app.assignOperationalTemporal,
+        getOperationalTemporal = app.getOperationalTemporal,
+        evaluateDueStatus = app.evaluateDueStatus,
+        createOperationalDependency = app.createOperationalDependency,
+        getOperationalPrerequisites = app.getOperationalPrerequisites,
+    )
+
+    private fun factory(create: () -> ViewModel): ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = create() as T
+        }
 }

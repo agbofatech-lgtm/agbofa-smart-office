@@ -15,6 +15,9 @@ import com.agbofa.smartoffice.application.decision.ExecuteAuthorizedActionUseCas
 import com.agbofa.smartoffice.application.decision.GetDecisionHistoryUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionProjectionUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
+import com.agbofa.smartoffice.application.decision.GetDecisionsUseCase
+import com.agbofa.smartoffice.application.decision.ListDecisionsUseCase
+import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
 import com.agbofa.smartoffice.application.decision.RejectDecisionUseCase
 import com.agbofa.smartoffice.application.decision.RequestAuthorizedActionUseCase
 import com.agbofa.smartoffice.application.decision.TransitionDecisionUseCase
@@ -22,6 +25,7 @@ import com.agbofa.smartoffice.application.decision.WithdrawDecisionUseCase
 import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionExecutionRepository
 import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionRequestRepository
 import com.agbofa.smartoffice.data.persistence.RoomDecisionRepository
+// RoomSearchIndexRepository added in Phase 17
 import com.agbofa.smartoffice.data.persistence.RoomDecisionTransitionRepository
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
@@ -135,6 +139,9 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var getDecision: GetDecisionUseCase
         private set
+    lateinit var getDecisions: GetDecisionsUseCase
+    lateinit var listDecisions: ListDecisionsUseCase
+        private set
     lateinit var getDecisionHistory: GetDecisionHistoryUseCase
         private set
     lateinit var getDecisionProjection: GetDecisionProjectionUseCase
@@ -242,6 +249,8 @@ class SmartOfficeApplication : Application() {
         val actionExecutions = RoomAuthorizedActionExecutionRepository(database.authorizedActionExecutionDao())
         createDecision = CreateDecisionUseCase(decisionRepo)
         getDecision = GetDecisionUseCase(decisionRepo)
+        getDecisions = GetDecisionsUseCase(decisionRepo, decisionTransitions)
+        listDecisions = ListDecisionsUseCase(decisionRepo, decisionTransitions)
         getDecisionHistory = GetDecisionHistoryUseCase(decisionTransitions)
         getDecisionProjection = GetDecisionProjectionUseCase(decisionRepo, decisionTransitions)
         val transitionDecision = TransitionDecisionUseCase(decisionRepo, decisionTransitions)

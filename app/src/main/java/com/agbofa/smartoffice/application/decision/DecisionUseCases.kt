@@ -140,3 +140,31 @@ class WithdrawDecisionUseCase(
     fun execute(transitionId: String, decisionId: String, at: DecisionTransitionInstant) =
         transition.execute(transitionId, decisionId, DecisionStatus.WITHDRAWN, at)
 }
+
+
+data class DecisionListItem(
+    val decision: Decision,
+    val status: DecisionStatus,
+)
+
+open class GetDecisionsUseCase(
+    private val decisions: DecisionRepository,
+    private val transitions: DecisionTransitionRepository,
+) {
+    fun execute(): List<DecisionListItem> =
+        decisions.listAll()
+            .sortedWith(compareByDescending<Decision> { it.createdAt.value }.thenBy { it.id.value })
+            .map { DecisionListItem(it, DecisionProjection.current(transitions.listByDecisionId(it.id))) }
+}
+
+
+class ListDecisionsUseCase(
+    private val inner: GetDecisionsUseCase,
+) {
+    constructor(
+        decisions: DecisionRepository,
+        transitions: DecisionTransitionRepository,
+    ) : this(GetDecisionsUseCase(decisions, transitions))
+
+    fun execute() = inner.execute()
+}
