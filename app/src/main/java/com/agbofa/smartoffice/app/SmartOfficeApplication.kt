@@ -5,6 +5,7 @@ import com.agbofa.smartoffice.application.capture.CaptureExpressionUseCase
 import com.agbofa.smartoffice.application.classification.ClassifyJournalEntryUseCase
 import com.agbofa.smartoffice.application.classification.GetActiveClassificationUseCase
 import com.agbofa.smartoffice.application.classification.GetUnclassifiedJournalEntriesUseCase
+import com.agbofa.smartoffice.application.analytics.GetOperationalAnalyticsUseCase
 import com.agbofa.smartoffice.application.integrity.EvaluateIntegrityUseCase
 import com.agbofa.smartoffice.application.projection.GetOperationalOverviewUseCase
 import com.agbofa.smartoffice.application.projection.GetOperationalOverviewsUseCase
@@ -128,6 +129,8 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var getOperationalOverviews: GetOperationalOverviewsUseCase
         private set
+    lateinit var getOperationalAnalytics: GetOperationalAnalyticsUseCase
+        private set
     lateinit var createDecision: CreateDecisionUseCase
         private set
     lateinit var getDecision: GetDecisionUseCase
@@ -232,6 +235,7 @@ class SmartOfficeApplication : Application() {
             workflowTransitions,
             evaluateIntegrity,
         )
+        getOperationalAnalytics = GetOperationalAnalyticsUseCase(getOperationalOverviews, evaluateIntegrity)
         val decisionRepo = RoomDecisionRepository(database.decisionDao())
         val decisionTransitions = RoomDecisionTransitionRepository(database.decisionTransitionDao())
         val actionRequests = RoomAuthorizedActionRequestRepository(database.authorizedActionRequestDao())

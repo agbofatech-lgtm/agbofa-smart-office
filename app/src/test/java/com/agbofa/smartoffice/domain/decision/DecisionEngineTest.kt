@@ -63,4 +63,28 @@ class DecisionEngineTest {
         )
         assertTrue(result is DomainResult.Failure)
     }
+
+    @Test
+    fun terminalRejectsResurrection() {
+        val at = DecisionTransitionInstant(Instant.parse("2026-09-07T12:00:00Z"))
+        val decisionId = id("dec-term")
+        assertTrue(
+            DecisionTransition.of(tid("t-rej"), decisionId, DecisionStatus.REJECTED, DecisionStatus.APPROVED, at)
+                is DomainResult.Failure,
+        )
+        assertTrue(
+            DecisionTransition.of(tid("t-app"), decisionId, DecisionStatus.APPROVED, DecisionStatus.WITHDRAWN, at)
+                is DomainResult.Failure,
+        )
+    }
+
+    @Test
+    fun insertionOrderDoesNotChangeProjection() {
+        val decisionId = id("dec-order")
+        val at = DecisionTransitionInstant(Instant.parse("2026-09-07T12:00:00Z"))
+        val first = (DecisionTransition.of(tid("t-b"), decisionId, DecisionStatus.PROPOSED, DecisionStatus.APPROVED, at) as DomainResult.Success).value
+        val sameTime = (DecisionTransition.of(tid("t-a"), decisionId, DecisionStatus.PROPOSED, DecisionStatus.REJECTED, at) as DomainResult.Success).value
+        assertEquals(DecisionStatus.APPROVED, DecisionProjection.current(listOf(first, sameTime)))
+        assertEquals(DecisionStatus.APPROVED, DecisionProjection.current(listOf(sameTime, first)))
+    }
 }

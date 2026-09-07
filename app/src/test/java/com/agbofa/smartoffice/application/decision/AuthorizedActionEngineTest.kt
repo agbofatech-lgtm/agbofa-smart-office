@@ -22,12 +22,9 @@ import com.agbofa.smartoffice.data.workflow.InMemoryWorkflowStepRepository
 import com.agbofa.smartoffice.data.workflow.InMemoryWorkflowStepTransitionRepository
 import com.agbofa.smartoffice.domain.classification.ClassificationBasis
 import com.agbofa.smartoffice.domain.classification.ClassificationType
-import com.agbofa.smartoffice.domain.decision.AuthorizedActionRequest
-import com.agbofa.smartoffice.domain.decision.AuthorizedActionRequestId
 import com.agbofa.smartoffice.domain.decision.AuthorizedActionType
 import com.agbofa.smartoffice.domain.decision.DecisionStatus
 import com.agbofa.smartoffice.domain.decision.DecisionSubject
-import com.agbofa.smartoffice.domain.decision.TransitionStateParameters
 import com.agbofa.smartoffice.domain.foundation.result.DomainResult
 import com.agbofa.smartoffice.domain.foundation.time.ActionRequestInstant
 import com.agbofa.smartoffice.domain.foundation.time.CaptureInstant
@@ -36,6 +33,7 @@ import com.agbofa.smartoffice.domain.foundation.time.DecisionCreationInstant
 import com.agbofa.smartoffice.domain.foundation.time.DecisionTransitionInstant
 import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
 import com.agbofa.smartoffice.domain.foundation.time.OperationalCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.OperationalTransitionInstant
 import com.agbofa.smartoffice.domain.operations.OperationalRecordId
 import com.agbofa.smartoffice.domain.operations.OperationalState
 import org.junit.Assert.assertEquals
@@ -62,9 +60,16 @@ class AuthorizedActionEngineTest {
     private val project = GetDecisionProjectionUseCase(decisions, decisionHistory)
     private val requestAction = RequestAuthorizedActionUseCase(decisions, decisionHistory, requests)
     private val executeAction = ExecuteAuthorizedActionUseCase(
-        decisions, decisionHistory, requests, executions,
+        requests,
+        executions,
+        decisionHistory,
         TransitionOperationalRecordStateUseCase(records, states),
-        AdvanceWorkflowUseCase(workflows, steps, TransitionWorkflowStepUseCase(steps, workflowTransitions), workflowTransitions),
+        AdvanceWorkflowUseCase(
+            workflows,
+            steps,
+            TransitionWorkflowStepUseCase(steps, workflowTransitions),
+            workflowTransitions,
+        ),
     )
 
     private fun seedRecord(): OperationalRecordId {
@@ -87,34 +92,61 @@ class AuthorizedActionEngineTest {
         val recordId = seedRecord()
         assertTrue(
             createDecision.execute(
-                "d-1", DecisionSubject.operationalRecord(recordId),
-                AuthorizedActionType.TRANSITION_OPERATIONAL_STATE, "Activate", DecisionCreationInstant(t0),
+                "d-1",
+                DecisionSubject.operationalRecord(recordId),
+                AuthorizedActionType.TRANSITION_OPERATIONAL_STATE,
+                "Activate",
+                DecisionCreationInstant(t0),
             ) is DomainResult.Success,
         )
         assertEquals(DecisionStatus.PROPOSED, (project.execute("d-1") as DomainResult.Success).value)
-        val request = (
-            AuthorizedActionRequest.transitionState(
-                (AuthorizedActionRequestId.of("ar-1") as DomainResult.Success).value,
-                (com.agbofa.smartoffice.domain.decision.DecisionId.of("d-1") as DomainResult.Success).value,
-                TransitionStateParameters(recordId, OperationalState.ACTIVE),
-                ActionRequestInstant(t0),
-            ) as DomainResult.Success
-            ).value
-        assertTrue(requestAction.execute(request) is DomainResult.Failure)
+        val blocked = requestAction.execute(
+            requestId = "ar-1",
+            decisionIdValue = "d-1",
+            requestedAt = ActionRequestInstant(t0),
+            toStateName = OperationalState.ACTIVE.name,
+        )
+        assertTrue(blocked is DomainResult.Failure)
         assertTrue(approve.execute("dt-1", "d-1", DecisionTransitionInstant(t0)) is DomainResult.Success)
         assertEquals(DecisionStatus.APPROVED, (project.execute("d-1") as DomainResult.Success).value)
-        assertTrue(requestAction.execute(request) is DomainResult.Success)
-        assertTrue(executeAction.execute("ex-1", "ar-1", ActionRequestInstant(t0), "st-1") is DomainResult.Success)
+        assertTrue(
+            requestAction.execute(
+                requestId = "ar-1",
+                decisionIdValue = "d-1",
+                requestedAt = ActionRequestInstant(t0),
+                toStateName = OperationalState.ACTIVE.name,
+            ) is DomainResult.Success,
+        )
+        assertTrue(
+            executeAction.execute(
+                requestIdValue = "ar-1",
+                executionIdValue = "ex-1",
+                executedAt = ActionRequestInstant(t0),
+                ownerStateTransitionId = "st-1",
+                ownerStateTransitionedAt = OperationalTransitionInstant(t0),
+            ) is DomainResult.Success,
+        )
         assertEquals(OperationalState.ACTIVE, GetOperationalRecordStateUseCase(states).execute(recordId))
-        assertTrue(executeAction.execute("ex-2", "ar-1", ActionRequestInstant(t0), "st-2") is DomainResult.Failure)
+        assertTrue(
+            executeAction.execute(
+                requestIdValue = "ar-1",
+                executionIdValue = "ex-2",
+                executedAt = ActionRequestInstant(t0),
+                ownerStateTransitionId = "st-2",
+                ownerStateTransitionedAt = OperationalTransitionInstant(t0),
+            ) is DomainResult.Failure,
+        )
     }
 
     @Test
     fun decisionDoesNotWriteStateWithoutExecution() {
         val recordId = seedRecord()
         createDecision.execute(
-            "d-1", DecisionSubject.operationalRecord(recordId),
-            AuthorizedActionType.TRANSITION_OPERATIONAL_STATE, "Activate", DecisionCreationInstant(t0),
+            "d-1",
+            DecisionSubject.operationalRecord(recordId),
+            AuthorizedActionType.TRANSITION_OPERATIONAL_STATE,
+            "Activate",
+            DecisionCreationInstant(t0),
         )
         approve.execute("dt-1", "d-1", DecisionTransitionInstant(t0))
         assertEquals(OperationalState.OPEN, GetOperationalRecordStateUseCase(states).execute(recordId))

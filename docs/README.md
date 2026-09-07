@@ -36,8 +36,9 @@
 - [ADR-019 Deterministic Operational Projection Architecture](adr/ADR-019-Deterministic-Operational-Projection-Architecture.md)
 - [ADR-020 Core Hardening and Migration Safety](adr/ADR-020-Core-Hardening-and-Migration-Safety.md)
 - [ADR-021 Deterministic Human Decision and Authorized Action Architecture](adr/ADR-021-Deterministic-Human-Decision-and-Authorized-Action-Architecture.md)
+- [ADR-022 Deterministic Ephemeral Analytics Architecture](adr/ADR-022-Deterministic-Ephemeral-Analytics-Architecture.md)
 
-Phase 0–14 decisions remain locked. Phase 15 implementation remains CLOSED.
+Phase 0–15 decisions remain locked. Phase 16 implementation remains CLOSED.
 
 ## Stage 12.5 / Phase 13 / Phase 14
 
@@ -46,3 +47,4 @@ Phase 0–14 decisions remain locked. Phase 15 implementation remains CLOSED.
 - `docs/architecture/PHASE_14_FORWARD_ARCHITECTURE.md`
 - `docs/architecture/AI_BOUNDARY.md`
 - `docs/architecture/PHASE_14_RISK_REGISTER.md`
+- `docs/architecture/PHASE_15_FORWARD_ARCHITECTURE.md`

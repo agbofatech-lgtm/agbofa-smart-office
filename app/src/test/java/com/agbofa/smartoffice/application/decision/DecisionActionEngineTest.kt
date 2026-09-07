@@ -12,13 +12,14 @@ import com.agbofa.smartoffice.data.operations.InMemoryOperationalStateRepository
 import com.agbofa.smartoffice.data.workflow.InMemoryWorkflowRepository
 import com.agbofa.smartoffice.data.workflow.InMemoryWorkflowStepRepository
 import com.agbofa.smartoffice.data.workflow.InMemoryWorkflowStepTransitionRepository
-import com.agbofa.smartoffice.domain.decision.ActionExecutionOutcome
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionExecutionResult
 import com.agbofa.smartoffice.domain.decision.AuthorizedActionType
-import com.agbofa.smartoffice.domain.decision.DecisionSubjectKind
+import com.agbofa.smartoffice.domain.decision.DecisionSubject
 import com.agbofa.smartoffice.domain.foundation.result.DomainResult
 import com.agbofa.smartoffice.domain.foundation.time.ActionRequestInstant
 import com.agbofa.smartoffice.domain.foundation.time.DecisionCreationInstant
 import com.agbofa.smartoffice.domain.foundation.time.DecisionTransitionInstant
+import com.agbofa.smartoffice.domain.foundation.time.OperationalTransitionInstant
 import com.agbofa.smartoffice.domain.operations.OperationalRecordId
 import com.agbofa.smartoffice.domain.operations.OperationalState
 import org.junit.Assert.assertEquals
@@ -38,10 +39,9 @@ class DecisionActionEngineTest {
     private val reject = RejectDecisionUseCase(TransitionDecisionUseCase(decisions, history))
     private val requestAction = RequestAuthorizedActionUseCase(decisions, history, requests)
     private val execute = ExecuteAuthorizedActionUseCase(
-        decisions,
-        history,
         requests,
         executions,
+        history,
         TransitionOperationalRecordStateUseCase(records, states),
         AdvanceWorkflowUseCase(
             InMemoryWorkflowRepository(),
@@ -55,14 +55,15 @@ class DecisionActionEngineTest {
     )
 
     private fun instant(value: String) = Instant.parse(value)
+    private fun recordSubject(value: String) =
+        DecisionSubject.operationalRecord((OperationalRecordId.of(value) as DomainResult.Success).value)
 
     @Test
     fun requestRejectedUntilApproved() {
         assertTrue(
             create.execute(
                 decisionId = "dec-1",
-                subjectKind = DecisionSubjectKind.OPERATIONAL_RECORD,
-                subjectTargetId = "op-missing",
+                subject = recordSubject("op-missing"),
                 actionType = AuthorizedActionType.TRANSITION_OPERATIONAL_STATE,
                 rationale = "Activate follow-up",
                 createdAt = DecisionCreationInstant(instant("2026-09-07T12:00:00Z")),
@@ -70,7 +71,7 @@ class DecisionActionEngineTest {
         )
         val before = requestAction.execute(
             requestId = "act-1",
-            decisionId = "dec-1",
+            decisionIdValue = "dec-1",
             requestedAt = ActionRequestInstant(instant("2026-09-07T12:05:00Z")),
             toStateName = OperationalState.ACTIVE.name,
         )
@@ -81,7 +82,7 @@ class DecisionActionEngineTest {
         )
         val after = requestAction.execute(
             requestId = "act-1",
-            decisionId = "dec-1",
+            decisionIdValue = "dec-1",
             requestedAt = ActionRequestInstant(instant("2026-09-07T12:15:00Z")),
             toStateName = OperationalState.ACTIVE.name,
         )
@@ -92,8 +93,7 @@ class DecisionActionEngineTest {
     fun executeDoesNotWriteStateWhenOwnerRejectsMissingRecord() {
         create.execute(
             decisionId = "dec-2",
-            subjectKind = DecisionSubjectKind.OPERATIONAL_RECORD,
-            subjectTargetId = "op-missing",
+            subject = recordSubject("op-missing"),
             actionType = AuthorizedActionType.TRANSITION_OPERATIONAL_STATE,
             rationale = "Activate missing record",
             createdAt = DecisionCreationInstant(instant("2026-09-07T12:00:00Z")),
@@ -101,20 +101,21 @@ class DecisionActionEngineTest {
         approve.execute("tr-2", "dec-2", DecisionTransitionInstant(instant("2026-09-07T12:10:00Z")))
         requestAction.execute(
             requestId = "act-2",
-            decisionId = "dec-2",
+            decisionIdValue = "dec-2",
             requestedAt = ActionRequestInstant(instant("2026-09-07T12:15:00Z")),
             toStateName = OperationalState.ACTIVE.name,
         )
         val executed = execute.execute(
-            executionId = "exec-2",
-            requestId = "act-2",
+            requestIdValue = "act-2",
+            executionIdValue = "exec-2",
             executedAt = ActionRequestInstant(instant("2026-09-07T12:20:00Z")),
-            operationalStateTransitionId = "st-owner-1",
+            ownerStateTransitionId = "st-owner-1",
+            ownerStateTransitionedAt = OperationalTransitionInstant(instant("2026-09-07T12:20:00Z")),
         )
         assertTrue(executed is DomainResult.Success)
         assertEquals(
-            ActionExecutionOutcome.REJECTED,
-            (executed as DomainResult.Success).value.outcome,
+            AuthorizedActionExecutionResult.REJECTED_BY_OWNER,
+            (executed as DomainResult.Success).value.result,
         )
         assertTrue(
             states.listByOperationalRecordId(
@@ -122,10 +123,11 @@ class DecisionActionEngineTest {
             ).isEmpty(),
         )
         val second = execute.execute(
-            executionId = "exec-3",
-            requestId = "act-2",
+            requestIdValue = "act-2",
+            executionIdValue = "exec-3",
             executedAt = ActionRequestInstant(instant("2026-09-07T12:21:00Z")),
-            operationalStateTransitionId = "st-owner-2",
+            ownerStateTransitionId = "st-owner-2",
+            ownerStateTransitionedAt = OperationalTransitionInstant(instant("2026-09-07T12:21:00Z")),
         )
         assertTrue(second is DomainResult.Failure)
     }
@@ -134,8 +136,7 @@ class DecisionActionEngineTest {
     fun rejectIsTerminal() {
         create.execute(
             decisionId = "dec-3",
-            subjectKind = DecisionSubjectKind.OPERATIONAL_RECORD,
-            subjectTargetId = "op-1",
+            subject = recordSubject("op-1"),
             actionType = AuthorizedActionType.TRANSITION_OPERATIONAL_STATE,
             rationale = "Reject path",
             createdAt = DecisionCreationInstant(instant("2026-09-07T12:00:00Z")),
