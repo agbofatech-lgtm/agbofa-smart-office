@@ -55,24 +55,18 @@ class CreateWorkflowUseCase(
             is DomainResult.Failure -> return result
             is DomainResult.Success -> result.value
         }
-        val saved = when (val result = workflows.save(workflow)) {
-            is DomainResult.Failure -> return result
-            is DomainResult.Success -> result.value
-        }
-        stepSpecs.sortedBy { it.ordinal }.forEach { spec ->
+        val prepared = mutableListOf<WorkflowStep>()
+        for (spec in stepSpecs.sortedBy { it.ordinal }) {
             val stepId = when (val result = WorkflowStepId.of(spec.stepId)) {
                 is DomainResult.Failure -> return result
                 is DomainResult.Success -> result.value
             }
-            val step = when (val result = WorkflowStep.of(stepId, saved.id, spec.ordinal, spec.key, spec.label)) {
+            val step = when (val result = WorkflowStep.of(stepId, workflow.id, spec.ordinal, spec.key, spec.label)) {
                 is DomainResult.Failure -> return result
                 is DomainResult.Success -> result.value
             }
-            when (val result = steps.save(step)) {
-                is DomainResult.Failure -> return result
-                is DomainResult.Success -> Unit
-            }
+            prepared += step
         }
-        return DomainResult.Success(saved)
+        return workflows.saveWithSteps(workflow, prepared)
     }
 }

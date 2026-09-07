@@ -40,6 +40,33 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     companion object {
         const val NAME = "smart-office.db"
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS classifications (
+                        id TEXT NOT NULL,
+                        journalEntryId TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        classifiedAt TEXT NOT NULL,
+                        revision INTEGER NOT NULL,
+                        ruleVersion TEXT,
+                        supersedesId TEXT,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(journalEntryId) REFERENCES journal_entries(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_classifications_journalEntryId_revision ON classifications(journalEntryId, revision)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_classifications_journalEntryId ON classifications(journalEntryId)",
+                )
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
@@ -241,8 +268,17 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                 SmartOfficeDatabase::class.java,
                 NAME,
             )
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
-                .fallbackToDestructiveMigration()
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                )
+                // Main-thread queries remain because current use cases are synchronous
+                // and invoked from the composition-root UI thread. Removing this
+                // requires an async application rewrite, which is out of Phase 13.
                 .allowMainThreadQueries()
                 .build()
         }

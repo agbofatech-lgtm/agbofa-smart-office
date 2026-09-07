@@ -29,6 +29,31 @@ class InMemoryWorkflowRepository : WorkflowRepository {
         return DomainResult.Success(workflow)
     }
 
+    override fun saveWithSteps(workflow: Workflow, steps: List<WorkflowStep>): DomainResult<Workflow> {
+        if (steps.isEmpty()) {
+            return DomainResult.Failure(DomainError.ValidationError("Workflow requires at least one step", "steps"))
+        }
+        val saved = save(workflow)
+        if (saved is DomainResult.Failure) return saved
+        val stepStore = companionSteps ?: return DomainResult.Failure(
+            DomainError.PersistenceFailure("In-memory workflow step store is not attached"),
+        )
+        val persisted = mutableListOf<WorkflowStep>()
+        for (step in steps) {
+            when (val result = stepStore.save(step)) {
+                is DomainResult.Failure -> {
+                    persisted.forEach { stepStore.remove(it.id) }
+                    byId.remove(workflow.id.value)
+                    return result
+                }
+                is DomainResult.Success -> persisted += result.value
+            }
+        }
+        return DomainResult.Success(workflow)
+    }
+
+    internal var companionSteps: InMemoryWorkflowStepRepository? = null
+
     override fun findById(id: WorkflowId): Workflow? = byId[id.value]
 
     override fun findByOperationalRecordId(operationalRecordId: OperationalRecordId): Workflow? =
@@ -53,6 +78,10 @@ class InMemoryWorkflowStepRepository : WorkflowStepRepository {
         }
         byId[step.id.value] = step
         return DomainResult.Success(step)
+    }
+
+    internal fun remove(id: WorkflowStepId) {
+        byId.remove(id.value)
     }
 
     override fun findById(id: WorkflowStepId): WorkflowStep? = byId[id.value]

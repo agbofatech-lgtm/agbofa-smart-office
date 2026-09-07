@@ -16,8 +16,11 @@ import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransitionId
 import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransitionRepository
 
 class RoomWorkflowRepository(
-    private val dao: WorkflowDao,
+    private val database: SmartOfficeDatabase,
 ) : WorkflowRepository {
+    private val dao: WorkflowDao get() = database.workflowDao()
+    private val stepDao: WorkflowStepDao get() = database.workflowStepDao()
+
     override fun save(workflow: Workflow): DomainResult<Workflow> {
         if (dao.findById(workflow.id.value) != null) {
             return DomainResult.Failure(DomainError.InvalidState("Workflow id already exists"))
@@ -30,6 +33,34 @@ class RoomWorkflowRepository(
             DomainResult.Success(workflow)
         } catch (error: Exception) {
             DomainResult.Failure(DomainError.PersistenceFailure(error.message ?: "Failed to persist workflow"))
+        }
+    }
+
+    override fun saveWithSteps(workflow: Workflow, steps: List<WorkflowStep>): DomainResult<Workflow> {
+        if (steps.isEmpty()) {
+            return DomainResult.Failure(DomainError.ValidationError("Workflow requires at least one step", "steps"))
+        }
+        return try {
+            database.runInTransaction {
+                if (dao.findById(workflow.id.value) != null) {
+                    error("Workflow id already exists")
+                }
+                if (dao.findByOperationalRecordId(workflow.operationalRecordId.value) != null) {
+                    error("Workflow already exists for operational record")
+                }
+                dao.insert(workflow.toEntity())
+                for (step in steps) {
+                    if (stepDao.findById(step.id.value) != null) {
+                        error("Workflow step id already exists")
+                    }
+                    stepDao.insert(step.toEntity())
+                }
+            }
+            DomainResult.Success(workflow)
+        } catch (error: Exception) {
+            DomainResult.Failure(
+                DomainError.PersistenceFailure(error.message ?: "Failed to persist workflow definition"),
+            )
         }
     }
 

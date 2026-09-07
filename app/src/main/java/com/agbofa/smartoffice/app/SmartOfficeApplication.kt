@@ -151,7 +151,7 @@ class SmartOfficeApplication : Application() {
         createOperationalDependency = CreateOperationalDependencyUseCase(operations, dependencies)
         getOperationalPrerequisites = GetOperationalPrerequisitesUseCase(dependencies)
         getOperationalDependents = GetOperationalDependentsUseCase(dependencies)
-        val workflowRepo = RoomWorkflowRepository(database.workflowDao())
+        val workflowRepo = RoomWorkflowRepository(database)
         val workflowSteps = RoomWorkflowStepRepository(database.workflowStepDao())
         val workflowTransitions = RoomWorkflowStepTransitionRepository(database.workflowStepTransitionDao())
         createWorkflow = CreateWorkflowUseCase(operations, workflowRepo, workflowSteps)
@@ -175,20 +175,31 @@ class SmartOfficeApplication : Application() {
             rules,
         )
         getOperationalOverview = GetOperationalOverviewUseCase(
-            operations,
-            journal,
             captures,
+            journal,
             classifications,
+            operations,
             states,
             temporals,
-            getOperationalPrerequisites,
-            getOperationalDependents,
+            dependencies,
             workflowRepo,
             workflowSteps,
             workflowTransitions,
             evaluateIntegrity,
         )
-        getOperationalOverviews = GetOperationalOverviewsUseCase(operations, getOperationalOverview)
+        getOperationalOverviews = GetOperationalOverviewsUseCase(
+            captures,
+            journal,
+            classifications,
+            operations,
+            states,
+            temporals,
+            dependencies,
+            workflowRepo,
+            workflowSteps,
+            workflowTransitions,
+            evaluateIntegrity,
+        )
     }
 }
 

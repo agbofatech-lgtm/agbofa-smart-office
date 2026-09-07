@@ -47,6 +47,9 @@ class IntegrityEngineTest {
     private val dependencies = InMemoryOperationalDependencyRepository()
     private val workflows = InMemoryWorkflowRepository()
     private val steps = InMemoryWorkflowStepRepository()
+        init {
+            workflows.companionSteps = steps
+        }
     private val transitions = InMemoryWorkflowStepTransitionRepository()
     private val rules = InMemoryRuleRepository()
     private val evaluate = EvaluateIntegrityUseCase(

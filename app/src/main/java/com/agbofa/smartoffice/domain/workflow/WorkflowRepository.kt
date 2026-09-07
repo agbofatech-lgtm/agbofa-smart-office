@@ -5,6 +5,13 @@ import com.agbofa.smartoffice.domain.operations.OperationalRecordId
 
 interface WorkflowRepository {
     fun save(workflow: Workflow): DomainResult<Workflow>
+
+    /**
+     * Persist a workflow and its required steps atomically.
+     * Implementations must not leave a workflow without its steps.
+     */
+    fun saveWithSteps(workflow: Workflow, steps: List<WorkflowStep>): DomainResult<Workflow>
+
     fun findById(id: WorkflowId): Workflow?
     fun findByOperationalRecordId(operationalRecordId: OperationalRecordId): Workflow?
     fun listAll(): List<Workflow>

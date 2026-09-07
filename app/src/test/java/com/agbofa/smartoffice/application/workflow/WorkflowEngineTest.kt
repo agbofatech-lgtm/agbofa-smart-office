@@ -36,6 +36,9 @@ class WorkflowEngineTest {
     private val operations = InMemoryOperationalRecordRepository()
     private val workflows = InMemoryWorkflowRepository()
     private val steps = InMemoryWorkflowStepRepository()
+        init {
+            workflows.companionSteps = steps
+        }
     private val history = InMemoryWorkflowStepTransitionRepository()
     private val captureUseCase = CaptureExpressionUseCase(captures)
     private val admit = AdmitCaptureToJournalUseCase(captures, journal)

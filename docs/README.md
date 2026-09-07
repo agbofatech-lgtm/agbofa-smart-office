@@ -34,5 +34,14 @@
 - [ADR-017 Deterministic Rules Architecture](adr/ADR-017-Deterministic-Rules-Architecture.md)
 - [ADR-018 Deterministic Integrity Architecture](adr/ADR-018-Deterministic-Integrity-Architecture.md)
 - [ADR-019 Deterministic Operational Projection Architecture](adr/ADR-019-Deterministic-Operational-Projection-Architecture.md)
+- [ADR-020 Core Hardening and Migration Safety](adr/ADR-020-Core-Hardening-and-Migration-Safety.md)
 
-Phase 0–12 decisions remain locked. Phase 13 Analytics remains CLOSED.
+Phase 0–13 decisions remain locked. Next product layer remains CLOSED pending Owner authorization after Phase 14 analysis.
+
+## Stage 12.5 / Phase 13 / Phase 14
+
+- `docs/reviews/PHASE_13_HARDENING.md`
+- `docs/architecture/POST_CORE_ARCHITECTURE_MAP.md`
+- `docs/architecture/PHASE_14_FORWARD_ARCHITECTURE.md`
+- `docs/architecture/AI_BOUNDARY.md`
+- `docs/architecture/PHASE_14_RISK_REGISTER.md`
