@@ -38,8 +38,9 @@
 - [ADR-021 Deterministic Human Decision and Authorized Action Architecture](adr/ADR-021-Deterministic-Human-Decision-and-Authorized-Action-Architecture.md)
 - [ADR-022 Deterministic Ephemeral Analytics Architecture](adr/ADR-022-Deterministic-Ephemeral-Analytics-Architecture.md)
 - [ADR-023 Thin Presentation Architecture](adr/ADR-023-Thin-Presentation-Architecture.md)
+- [ADR-024 Deterministic Rebuildable Search Architecture](adr/ADR-024-Deterministic-Rebuildable-Search-Architecture.md)
 
-Phase 0–16 decisions remain locked. Phase 17 implementation remains CLOSED.
+Phase 0–15 decisions remain locked. Phase 16 implementation remains CLOSED.
 
 ## Stage 12.5 / Phase 13 / Phase 14
 

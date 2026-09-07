@@ -17,7 +17,8 @@ import com.agbofa.smartoffice.application.decision.GetDecisionProjectionUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
 import com.agbofa.smartoffice.application.decision.GetDecisionsUseCase
 import com.agbofa.smartoffice.application.decision.ListDecisionsUseCase
-import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
+import com.agbofa.smartoffice.application.search.RebuildSearchIndexUseCase
+import com.agbofa.smartoffice.application.search.SearchUseCase
 import com.agbofa.smartoffice.application.decision.RejectDecisionUseCase
 import com.agbofa.smartoffice.application.decision.RequestAuthorizedActionUseCase
 import com.agbofa.smartoffice.application.decision.TransitionDecisionUseCase
@@ -25,7 +26,7 @@ import com.agbofa.smartoffice.application.decision.WithdrawDecisionUseCase
 import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionExecutionRepository
 import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionRequestRepository
 import com.agbofa.smartoffice.data.persistence.RoomDecisionRepository
-// RoomSearchIndexRepository added in Phase 17
+import com.agbofa.smartoffice.data.persistence.RoomSearchIndexRepository
 import com.agbofa.smartoffice.data.persistence.RoomDecisionTransitionRepository
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
@@ -156,6 +157,10 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var executeAuthorizedAction: ExecuteAuthorizedActionUseCase
         private set
+    lateinit var search: SearchUseCase
+        private set
+    lateinit var rebuildSearchIndex: RebuildSearchIndexUseCase
+        private set
 
     override fun onCreate() {
 
@@ -265,6 +270,9 @@ class SmartOfficeApplication : Application() {
             transitionOperationalRecordState,
             advanceWorkflow,
         )
+        val searchIndex = RoomSearchIndexRepository(database)
+        search = SearchUseCase(searchIndex)
+        rebuildSearchIndex = RebuildSearchIndexUseCase(journalTimeline, getOperationalOverviews, getDecisions, searchIndex)
     }
 }
 

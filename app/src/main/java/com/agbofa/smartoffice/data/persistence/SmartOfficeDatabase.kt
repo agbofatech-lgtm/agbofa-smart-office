@@ -24,8 +24,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DecisionTransitionEntity::class,
         AuthorizedActionRequestEntity::class,
         AuthorizedActionExecutionEntity::class,
+        SearchIndexEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -44,6 +45,7 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun decisionTransitionDao(): DecisionTransitionDao
     abstract fun authorizedActionRequestDao(): AuthorizedActionRequestDao
     abstract fun authorizedActionExecutionDao(): AuthorizedActionExecutionDao
+    abstract fun searchIndexDao(): SearchIndexDao
 
     companion object {
         const val NAME = "smart-office.db"
@@ -357,6 +359,25 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS search_index (
+                        id TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        entityId TEXT NOT NULL,
+                        content TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        PRIMARY KEY(id)
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_search_index_type ON search_index(type)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_search_index_entityId ON search_index(entityId)")
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
@@ -371,6 +392,7 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
+                    MIGRATION_8_9,
                 )
                 // Main-thread queries remain because current use cases are synchronous
                 // and invoked from the composition-root UI thread. Removing this

@@ -24,6 +24,8 @@ import com.agbofa.smartoffice.presentation.journal.JournalScreen
 import com.agbofa.smartoffice.presentation.journal.JournalViewModel
 import com.agbofa.smartoffice.presentation.navigation.AppDestination
 import com.agbofa.smartoffice.presentation.navigation.SmartOfficeScaffold
+import com.agbofa.smartoffice.presentation.search.SearchScreen
+import com.agbofa.smartoffice.presentation.search.SearchViewModel
 import com.agbofa.smartoffice.presentation.theme.SmartOfficeTheme
 import java.time.Instant
 
@@ -47,6 +49,9 @@ class MainActivity : ComponentActivity() {
     }
     private val analyticsViewModel: AnalyticsViewModel by viewModels {
         factory { AnalyticsViewModel(app.getOperationalAnalytics) }
+    }
+    private val searchViewModel: SearchViewModel by viewModels {
+        factory { SearchViewModel(app.search, app.rebuildSearchIndex) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,7 +111,12 @@ class MainActivity : ComponentActivity() {
                             state = analyticsViewModel.state,
                             onRefresh = { analyticsViewModel.refresh(edgeContext()) },
                             modifier = modifier,
-                        )) },
+                        )
+                        AppDestination.SEARCH -> SearchScreen(
+                            state = searchViewModel.state,
+                            onQueryChange = searchViewModel::onQueryChange,
+                            onSearch = searchViewModel::search,
+                            onRebuild = { searchViewModel.rebuild(edgeContext()) },
                             modifier = modifier,
                         )
                     }
