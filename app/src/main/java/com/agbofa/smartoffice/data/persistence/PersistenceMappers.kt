@@ -7,6 +7,22 @@ import com.agbofa.smartoffice.domain.rules.Rule
 import com.agbofa.smartoffice.domain.rules.RuleDefinitionBasis
 import com.agbofa.smartoffice.domain.rules.RuleId
 import com.agbofa.smartoffice.domain.rules.RuleVersion
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionExecution
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionExecutionId
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionRequest
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionRequestId
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionType
+import com.agbofa.smartoffice.domain.decision.Decision
+import com.agbofa.smartoffice.domain.decision.DecisionBasis
+import com.agbofa.smartoffice.domain.decision.DecisionId
+import com.agbofa.smartoffice.domain.decision.DecisionStatus
+import com.agbofa.smartoffice.domain.decision.DecisionSubject
+import com.agbofa.smartoffice.domain.decision.DecisionSubjectKind
+import com.agbofa.smartoffice.domain.decision.DecisionTransition
+import com.agbofa.smartoffice.domain.decision.DecisionTransitionId
+import com.agbofa.smartoffice.domain.foundation.time.ActionRequestInstant
+import com.agbofa.smartoffice.domain.foundation.time.DecisionCreationInstant
+import com.agbofa.smartoffice.domain.foundation.time.DecisionTransitionInstant
 
 import com.agbofa.smartoffice.domain.foundation.time.CivilTime
 import com.agbofa.smartoffice.domain.foundation.time.DueInstant
@@ -58,6 +74,7 @@ import com.agbofa.smartoffice.domain.foundation.time.JournalAdmissionInstant
 import com.agbofa.smartoffice.domain.journal.JournalEntry
 import com.agbofa.smartoffice.domain.journal.JournalEntryId
 import java.time.Instant
+import com.agbofa.smartoffice.domain.decision.AuthorizedActionExecutionResult
 
 internal fun Capture.toEntity(): CaptureEntity = CaptureEntity(
     id = id.value,
@@ -341,3 +358,97 @@ internal fun RuleEntity.toDomain(): Rule? {
     ) as? DomainResult.Success)?.value
 }
 
+internal fun Decision.toEntity(): DecisionEntity = DecisionEntity(
+    id = id.value,
+    subjectKind = subject.kind.name,
+    subjectTargetId = subject.targetId,
+    actionType = actionType.name,
+    rationale = rationale,
+    createdAt = createdAt.value.toString(),
+    basis = basis.name,
+)
+
+internal fun DecisionEntity.toDomain(): Decision? {
+    val parsedId = (DecisionId.of(id) as? DomainResult.Success)?.value ?: return null
+    val kind = runCatching { DecisionSubjectKind.valueOf(subjectKind) }.getOrNull() ?: return null
+    val action = runCatching { AuthorizedActionType.valueOf(actionType) }.getOrNull() ?: return null
+    val parsedBasis = runCatching { DecisionBasis.valueOf(basis) }.getOrNull() ?: return null
+    val created = runCatching { Instant.parse(createdAt) }.getOrNull() ?: return null
+    return (Decision.of(
+        id = parsedId,
+        subject = DecisionSubject(kind, subjectTargetId),
+        actionType = action,
+        rationale = rationale,
+        createdAt = DecisionCreationInstant(created),
+        basis = parsedBasis,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun DecisionTransition.toEntity(): DecisionTransitionEntity = DecisionTransitionEntity(
+    id = id.value,
+    decisionId = decisionId.value,
+    fromStatus = fromStatus.name,
+    toStatus = toStatus.name,
+    transitionedAt = transitionedAt.value.toString(),
+    basis = basis.name,
+)
+
+internal fun DecisionTransitionEntity.toDomain(): DecisionTransition? {
+    val parsedId = (DecisionTransitionId.of(id) as? DomainResult.Success)?.value ?: return null
+    val parsedDecisionId = (DecisionId.of(decisionId) as? DomainResult.Success)?.value ?: return null
+    val from = runCatching { DecisionStatus.valueOf(fromStatus) }.getOrNull() ?: return null
+    val to = runCatching { DecisionStatus.valueOf(toStatus) }.getOrNull() ?: return null
+    val parsedBasis = runCatching { DecisionBasis.valueOf(basis) }.getOrNull() ?: return null
+    val at = runCatching { Instant.parse(transitionedAt) }.getOrNull() ?: return null
+    return (DecisionTransition.of(
+        parsedId, parsedDecisionId, from, to, DecisionTransitionInstant(at), parsedBasis,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun AuthorizedActionRequest.toEntity(): AuthorizedActionRequestEntity = AuthorizedActionRequestEntity(
+    id = id.value,
+    decisionId = decisionId.value,
+    actionType = actionType.name,
+    targetId = targetId,
+    requestedAt = requestedAt.value.toString(),
+    toStateName = toStateName,
+    completeTransitionId = completeTransitionId,
+    activateTransitionId = activateTransitionId,
+)
+
+internal fun AuthorizedActionRequestEntity.toDomain(): AuthorizedActionRequest? {
+    val parsedId = (AuthorizedActionRequestId.of(id) as? DomainResult.Success)?.value ?: return null
+    val parsedDecisionId = (DecisionId.of(decisionId) as? DomainResult.Success)?.value ?: return null
+    val parsedType = runCatching { AuthorizedActionType.valueOf(actionType) }.getOrNull() ?: return null
+    val at = runCatching { Instant.parse(requestedAt) }.getOrNull() ?: return null
+    return (AuthorizedActionRequest.of(
+        id = parsedId,
+        decisionId = parsedDecisionId,
+        actionType = parsedType,
+        targetId = targetId,
+        requestedAt = ActionRequestInstant(at),
+        toStateName = toStateName,
+        completeTransitionId = completeTransitionId,
+        activateTransitionId = activateTransitionId,
+    ) as? DomainResult.Success)?.value
+}
+
+internal fun AuthorizedActionExecution.toEntity(): AuthorizedActionExecutionEntity = AuthorizedActionExecutionEntity(
+    id = id.value,
+    requestId = requestId.value,
+    decisionId = decisionId.value,
+    executedAt = executedAt.value.toString(),
+    outcome = result.name,
+    detail = detail,
+)
+
+internal fun AuthorizedActionExecutionEntity.toDomain(): AuthorizedActionExecution? {
+    val parsedId = (AuthorizedActionExecutionId.of(id) as? DomainResult.Success)?.value ?: return null
+    val parsedRequestId = (AuthorizedActionRequestId.of(requestId) as? DomainResult.Success)?.value ?: return null
+    val parsedDecisionId = (DecisionId.of(decisionId) as? DomainResult.Success)?.value ?: return null
+    val parsedResult = runCatching { AuthorizedActionExecutionResult.valueOf(outcome) }.getOrNull() ?: return null
+    val at = runCatching { Instant.parse(executedAt) }.getOrNull() ?: return null
+    return (AuthorizedActionExecution.of(
+        parsedId, parsedRequestId, parsedDecisionId, ActionRequestInstant(at), parsedResult, detail,
+    ) as? DomainResult.Success)?.value
+}

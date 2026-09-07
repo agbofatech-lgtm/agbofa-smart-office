@@ -35,8 +35,9 @@
 - [ADR-018 Deterministic Integrity Architecture](adr/ADR-018-Deterministic-Integrity-Architecture.md)
 - [ADR-019 Deterministic Operational Projection Architecture](adr/ADR-019-Deterministic-Operational-Projection-Architecture.md)
 - [ADR-020 Core Hardening and Migration Safety](adr/ADR-020-Core-Hardening-and-Migration-Safety.md)
+- [ADR-021 Deterministic Human Decision and Authorized Action Architecture](adr/ADR-021-Deterministic-Human-Decision-and-Authorized-Action-Architecture.md)
 
-Phase 0–13 decisions remain locked. Next product layer remains CLOSED pending Owner authorization after Phase 14 analysis.
+Phase 0–14 decisions remain locked. Phase 15 implementation remains CLOSED.
 
 ## Stage 12.5 / Phase 13 / Phase 14
 

@@ -18,12 +18,15 @@ class MigrationInventoryTest {
             SmartOfficeDatabase.MIGRATION_4_5,
             SmartOfficeDatabase.MIGRATION_5_6,
             SmartOfficeDatabase.MIGRATION_6_7,
+            SmartOfficeDatabase.MIGRATION_7_8,
         )
-        assertEquals(6, migrations.size)
+        assertEquals(7, migrations.size)
         assertEquals(1, migrations[0].startVersion)
         assertEquals(2, migrations[0].endVersion)
         assertEquals(6, migrations[5].startVersion)
+        assertEquals(7, migrations[6].startVersion)
         assertEquals(7, migrations[5].endVersion)
+        assertEquals(8, migrations[6].endVersion)
         migrations.forEach { assertNotNull(it) }
     }
 }

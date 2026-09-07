@@ -90,3 +90,12 @@ value class WorkflowTransitionInstant(val value: Instant)
 @JvmInline
 value class RuleCreationInstant(val value: Instant)
 
+@JvmInline
+value class DecisionCreationInstant(val value: Instant)
+
+@JvmInline
+value class DecisionTransitionInstant(val value: Instant)
+
+@JvmInline
+value class ActionRequestInstant(val value: Instant)
+

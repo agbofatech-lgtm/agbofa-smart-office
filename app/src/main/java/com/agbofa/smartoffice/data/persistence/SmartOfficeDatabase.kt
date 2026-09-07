@@ -20,8 +20,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WorkflowStepEntity::class,
         WorkflowStepTransitionEntity::class,
         RuleEntity::class,
+        DecisionEntity::class,
+        DecisionTransitionEntity::class,
+        AuthorizedActionRequestEntity::class,
+        AuthorizedActionExecutionEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -36,6 +40,10 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
     abstract fun workflowStepDao(): WorkflowStepDao
     abstract fun workflowStepTransitionDao(): WorkflowStepTransitionDao
     abstract fun ruleDao(): RuleDao
+    abstract fun decisionDao(): DecisionDao
+    abstract fun decisionTransitionDao(): DecisionTransitionDao
+    abstract fun authorizedActionRequestDao(): AuthorizedActionRequestDao
+    abstract fun authorizedActionExecutionDao(): AuthorizedActionExecutionDao
 
     companion object {
         const val NAME = "smart-office.db"
@@ -262,6 +270,93 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS human_decisions (
+                        id TEXT NOT NULL,
+                        subjectKind TEXT NOT NULL,
+                        subjectTargetId TEXT NOT NULL,
+                        actionType TEXT NOT NULL,
+                        rationale TEXT NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        PRIMARY KEY(id)
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_human_decisions_createdAt ON human_decisions(createdAt)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_human_decisions_subjectKind_subjectTargetId ON human_decisions(subjectKind, subjectTargetId)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS human_decision_transitions (
+                        id TEXT NOT NULL,
+                        decisionId TEXT NOT NULL,
+                        fromStatus TEXT NOT NULL,
+                        toStatus TEXT NOT NULL,
+                        transitionedAt TEXT NOT NULL,
+                        basis TEXT NOT NULL,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(decisionId) REFERENCES human_decisions(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_human_decision_transitions_decisionId ON human_decision_transitions(decisionId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_human_decision_transitions_transitionedAt ON human_decision_transitions(transitionedAt)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS authorized_action_requests (
+                        id TEXT NOT NULL,
+                        decisionId TEXT NOT NULL,
+                        actionType TEXT NOT NULL,
+                        targetId TEXT NOT NULL,
+                        requestedAt TEXT NOT NULL,
+                        toStateName TEXT,
+                        completeTransitionId TEXT,
+                        activateTransitionId TEXT,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(decisionId) REFERENCES human_decisions(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_authorized_action_requests_decisionId ON authorized_action_requests(decisionId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_authorized_action_requests_requestedAt ON authorized_action_requests(requestedAt)",
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS authorized_action_executions (
+                        id TEXT NOT NULL,
+                        requestId TEXT NOT NULL,
+                        decisionId TEXT NOT NULL,
+                        outcome TEXT NOT NULL,
+                        detail TEXT NOT NULL,
+                        executedAt TEXT NOT NULL,
+                        PRIMARY KEY(id),
+                        FOREIGN KEY(requestId) REFERENCES authorized_action_requests(id) ON DELETE RESTRICT
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_authorized_action_executions_requestId ON authorized_action_executions(requestId)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_authorized_action_executions_decisionId ON authorized_action_executions(decisionId)",
+                )
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
@@ -275,6 +370,7 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
+                    MIGRATION_7_8,
                 )
                 // Main-thread queries remain because current use cases are synchronous
                 // and invoked from the composition-root UI thread. Removing this

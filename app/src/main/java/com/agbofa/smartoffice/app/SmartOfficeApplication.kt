@@ -8,6 +8,20 @@ import com.agbofa.smartoffice.application.classification.GetUnclassifiedJournalE
 import com.agbofa.smartoffice.application.integrity.EvaluateIntegrityUseCase
 import com.agbofa.smartoffice.application.projection.GetOperationalOverviewUseCase
 import com.agbofa.smartoffice.application.projection.GetOperationalOverviewsUseCase
+import com.agbofa.smartoffice.application.decision.ApproveDecisionUseCase
+import com.agbofa.smartoffice.application.decision.CreateDecisionUseCase
+import com.agbofa.smartoffice.application.decision.ExecuteAuthorizedActionUseCase
+import com.agbofa.smartoffice.application.decision.GetDecisionHistoryUseCase
+import com.agbofa.smartoffice.application.decision.GetDecisionProjectionUseCase
+import com.agbofa.smartoffice.application.decision.GetDecisionUseCase
+import com.agbofa.smartoffice.application.decision.RejectDecisionUseCase
+import com.agbofa.smartoffice.application.decision.RequestAuthorizedActionUseCase
+import com.agbofa.smartoffice.application.decision.TransitionDecisionUseCase
+import com.agbofa.smartoffice.application.decision.WithdrawDecisionUseCase
+import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionExecutionRepository
+import com.agbofa.smartoffice.data.persistence.RoomAuthorizedActionRequestRepository
+import com.agbofa.smartoffice.data.persistence.RoomDecisionRepository
+import com.agbofa.smartoffice.data.persistence.RoomDecisionTransitionRepository
 import com.agbofa.smartoffice.application.journal.AdmitCaptureToJournalUseCase
 import com.agbofa.smartoffice.application.journal.GetJournalTimelineUseCase
 import com.agbofa.smartoffice.application.operations.AssignOperationalTemporalUseCase
@@ -114,6 +128,24 @@ class SmartOfficeApplication : Application() {
         private set
     lateinit var getOperationalOverviews: GetOperationalOverviewsUseCase
         private set
+    lateinit var createDecision: CreateDecisionUseCase
+        private set
+    lateinit var getDecision: GetDecisionUseCase
+        private set
+    lateinit var getDecisionHistory: GetDecisionHistoryUseCase
+        private set
+    lateinit var getDecisionProjection: GetDecisionProjectionUseCase
+        private set
+    lateinit var approveDecision: ApproveDecisionUseCase
+        private set
+    lateinit var rejectDecision: RejectDecisionUseCase
+        private set
+    lateinit var withdrawDecision: WithdrawDecisionUseCase
+        private set
+    lateinit var requestAuthorizedAction: RequestAuthorizedActionUseCase
+        private set
+    lateinit var executeAuthorizedAction: ExecuteAuthorizedActionUseCase
+        private set
 
     override fun onCreate() {
 
@@ -199,6 +231,26 @@ class SmartOfficeApplication : Application() {
             workflowSteps,
             workflowTransitions,
             evaluateIntegrity,
+        )
+        val decisionRepo = RoomDecisionRepository(database.decisionDao())
+        val decisionTransitions = RoomDecisionTransitionRepository(database.decisionTransitionDao())
+        val actionRequests = RoomAuthorizedActionRequestRepository(database.authorizedActionRequestDao())
+        val actionExecutions = RoomAuthorizedActionExecutionRepository(database.authorizedActionExecutionDao())
+        createDecision = CreateDecisionUseCase(decisionRepo)
+        getDecision = GetDecisionUseCase(decisionRepo)
+        getDecisionHistory = GetDecisionHistoryUseCase(decisionTransitions)
+        getDecisionProjection = GetDecisionProjectionUseCase(decisionRepo, decisionTransitions)
+        val transitionDecision = TransitionDecisionUseCase(decisionRepo, decisionTransitions)
+        approveDecision = ApproveDecisionUseCase(transitionDecision)
+        rejectDecision = RejectDecisionUseCase(transitionDecision)
+        withdrawDecision = WithdrawDecisionUseCase(transitionDecision)
+        requestAuthorizedAction = RequestAuthorizedActionUseCase(decisionRepo, decisionTransitions, actionRequests)
+        executeAuthorizedAction = ExecuteAuthorizedActionUseCase(
+            actionRequests,
+            actionExecutions,
+            decisionTransitions,
+            transitionOperationalRecordState,
+            advanceWorkflow,
         )
     }
 }
