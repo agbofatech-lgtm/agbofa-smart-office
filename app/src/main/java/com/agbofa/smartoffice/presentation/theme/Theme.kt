@@ -18,26 +18,24 @@ private val LightColors = lightColorScheme(
     background = BrandBackground,
     onBackground = BrandOnBackground,
     surface = BrandSurface,
-    onSurface = BrandOnBackground,
-    onSurfaceVariant = BrandPrimary,
+    onSurface = BrandOnSurface,
     surfaceVariant = BrandSurface,
+    onSurfaceVariant = BrandOnSurface,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = BrandPrimaryNight,
+    primary = BrandPrimaryDarkTheme,
     onPrimary = BrandPrimaryDark,
-    primaryContainer = BrandPrimaryDark,
-    onPrimaryContainer = BrandOnPrimary,
-    secondary = BrandSecondaryNight,
-    onSecondary = BrandBackgroundNight,
+    secondary = BrandSecondary,
+    onSecondary = BrandOnPrimary,
     tertiary = BrandAccent,
     onTertiary = BrandOnBackground,
-    background = BrandBackgroundNight,
-    onBackground = BrandOnBackgroundNight,
-    surface = BrandSurfaceNight,
-    onSurface = BrandOnBackgroundNight,
-    onSurfaceVariant = BrandPrimaryNight,
-    surfaceVariant = BrandSurfaceNight,
+    background = BrandBackgroundDark,
+    onBackground = BrandOnBackgroundDark,
+    surface = BrandSurfaceDark,
+    onSurface = BrandOnBackgroundDark,
+    surfaceVariant = BrandSurfaceDark,
+    onSurfaceVariant = BrandOnBackgroundDark,
 )
 
 @Composable
