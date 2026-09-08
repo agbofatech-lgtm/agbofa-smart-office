@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#1B3A6B</color>
+    <color name="brand_primary_variant">#0F2244</color>
+    <color name="brand_secondary">#2E7D4F</color>
+    <color name="brand_accent">#C9A227</color>
+    <color name="brand_background">#F4F1EA</color>
+    <color name="brand_surface">#EDE8DD</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+    <color name="brand_on_background">#121417</color>
+    <color name="brand_on_surface">#121417</color>
+    <color name="ic_launcher_background">#1B3A6B</color>
+</resources>
