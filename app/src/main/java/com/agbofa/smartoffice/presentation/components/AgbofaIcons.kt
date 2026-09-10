@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-internal object AgbofaIcons {
+object AgbofaIcons {
     val Home: ImageVector by lazy {
         material("Home") {
             path(fill = SolidColor(Color.Black), pathFillType = PathFillType.NonZero) {
