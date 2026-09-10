@@ -5,17 +5,17 @@
     <string name="product_tagline">Personal Operations System</string>
     <string name="foundation_status">System foundation initialized</string>
     <string name="capture_title">Capture</string>
-    <string name="capture_hint">Enter an expression. The system stores it. It does not interpret it.</string>
-    <string name="capture_field_label">Expression</string>
+    <string name="capture_hint">Write what matters. The office stores it as you entered it.</string>
+    <string name="capture_field_label">What matters</string>
     <string name="capture_action">Capture</string>
     <string name="journal_title">Journal</string>
-    <string name="journal_empty">No journal records yet.</string>
-    <string name="classify_action">Classify</string>
+    <string name="journal_empty">Nothing captured yet. Start with one clear note.</string>
+    <string name="classify_action">Apply classification</string>
     <string name="journal_classification_label">Classification: %1$s</string>
     <string name="classification_unclassified">Unclassified</string>
     <string name="classification_action">Classify</string>
-    <string name="create_operational_record">Create Operational Record</string>
-    <string name="operational_record_action">Create Operational Record</string>
+    <string name="create_operational_record">Open as operational work</string>
+    <string name="operational_record_action">Open as operational work</string>
     <string name="operational_record_exists">Operational record exists</string>
     <string name="operational_state_label">State: %1$s</string>
 </resources>
