@@ -9,13 +9,12 @@ import com.agbofa.smartoffice.domain.operations.DueStatus
 import com.agbofa.smartoffice.domain.operations.OperationalState
 import com.agbofa.smartoffice.domain.search.SearchType
 import com.agbofa.smartoffice.presentation.labels.asLabel
-import com.agbofa.smartoffice.presentation.theme.toLabel
 
-internal fun ClassificationType.displayLabel(): String = toLabel()
-internal fun OperationalState.displayLabel(): String = toLabel()
-internal fun DueStatus.displayLabel(): String = toLabel()
-internal fun DecisionStatus.displayLabel(): String = asLabel()
-internal fun SearchType.displayLabel(): String = toLabel()
-internal fun RecommendationType.displayLabel(): String = toLabel()
-internal fun AnomalyType.displayLabel(): String = toLabel()
-internal fun AdvisorySeverity.displayLabel(): String = asLabel()
+fun ClassificationType.displayLabel(): String = asLabel()
+fun OperationalState.displayLabel(): String = asLabel()
+fun DueStatus.displayLabel(): String = asLabel()
+fun DecisionStatus.displayLabel(): String = asLabel()
+fun SearchType.displayLabel(): String = asLabel()
+fun RecommendationType.displayLabel(): String = asLabel()
+fun AnomalyType.displayLabel(): String = asLabel()
+fun AdvisorySeverity.displayLabel(): String = asLabel()
