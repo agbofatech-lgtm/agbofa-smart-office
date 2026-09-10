@@ -2,61 +2,128 @@ package com.agbofa.smartoffice.presentation.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.domain.analytics.OperationalAnalyticsReport
+import com.agbofa.smartoffice.presentation.components.AgbofaEmptyState
+import com.agbofa.smartoffice.presentation.components.AgbofaPageHeader
+import com.agbofa.smartoffice.presentation.components.AgbofaSecondaryButton
+import com.agbofa.smartoffice.presentation.components.AgbofaSectionHeader
+import com.agbofa.smartoffice.presentation.components.AgbofaStatusPill
+import com.agbofa.smartoffice.presentation.components.AgbofaSurfaceCard
+import com.agbofa.smartoffice.presentation.components.PillTone
+import com.agbofa.smartoffice.presentation.theme.BrandMuted
+import com.agbofa.smartoffice.presentation.theme.BrandPrimary
 
 @Composable
 fun DashboardScreen(state: DashboardUiState, onRefresh: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Dashboard", style = MaterialTheme.typography.headlineSmall)
-        Button(onClick = onRefresh) { Text("Refresh") }
+    Column(
+        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp)
+            .semantics { contentDescription = "AGBOFA Smart Office home" },
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        AgbofaPageHeader(
+            eyebrow = "AGBOFA SMART OFFICE",
+            title = "Your office, at a glance.",
+            subtitle = "A calm view of what is open, due, and waiting on you.",
+        )
+        AgbofaSecondaryButton(text = "Refresh office", onClick = onRefresh)
         when {
-            state.loading -> Text("Loading")
-            state.error != null -> Text("Error: ${state.error}")
-            state.empty -> Text("No operational records.")
-            else -> state.analytics?.let { AnalyticsCards(it, state.overviewCount) }
+            state.loading -> Text("Gathering the office view…", color = BrandMuted)
+            state.error != null -> Text("Unable to load the office view.", color = MaterialTheme.colorScheme.error)
+            state.empty -> AgbofaEmptyState(
+                title = "Your command center is ready",
+                body = "Capture a journal entry to see operational activity here. Nothing is invented to fill this view.",
+            )
+            else -> state.analytics?.let { CommandCenter(it, state.overviewCount) }
         }
     }
 }
 
 @Composable
-fun AnalyticsCards(report: OperationalAnalyticsReport, overviewCount: Int) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Operational summary", style = MaterialTheme.typography.titleMedium)
-            Text("Records: $overviewCount")
-            Text("OPEN ${report.state.openCount} ACTIVE ${report.state.activeCount}")
-            Text("COMPLETED ${report.state.completedCount} CANCELLED ${report.state.cancelledCount}")
+private fun CommandCenter(report: OperationalAnalyticsReport, overviewCount: Int) {
+    val attention = report.temporal.pastDueCount + report.temporal.atDueCount +
+        report.integrity.warningCount + report.integrity.errorCount
+    AgbofaSectionHeader("Attention", "Only counts from live operational data.")
+    AgbofaSurfaceCard {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text("Needs a look", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (attention == 0) "Nothing urgent is waiting." else "$attention item(s) from dues and office health.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = BrandMuted,
+                )
+            }
+            AgbofaStatusPill(
+                text = if (attention == 0) "Clear" else "Review",
+                tone = if (attention == 0) PillTone.Positive else PillTone.Attention,
+            )
+        }
+        Text(
+            "Past due ${report.temporal.pastDueCount}  ·  Due now ${report.temporal.atDueCount}",
+            color = BrandMuted,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+    AgbofaSectionHeader("Overview")
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Metric("Records", overviewCount.toString(), Modifier.weight(1f))
+        Metric("Active", report.state.activeCount.toString(), Modifier.weight(1f))
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Metric("Completed", report.state.completedCount.toString(), Modifier.weight(1f))
+        Metric("Needs attention", attention.toString(), Modifier.weight(1f))
+    }
+    AgbofaSectionHeader("Workflow")
+    AgbofaSurfaceCard {
+        val total = report.workflow.recordsWithWorkflow
+        Text("Work in motion", style = MaterialTheme.typography.titleMedium)
+        Text(
+            if (total == 0) "No workflows are attached yet."
+            else "${report.workflow.workflowCompleteCount} complete of $total · ${report.workflow.workflowWithActiveStepCount} active",
+            style = MaterialTheme.typography.bodyMedium,
+            color = BrandMuted,
+        )
+        if (total > 0) {
+            LinearProgressIndicator(
+                progress = { report.workflow.workflowCompleteCount.toFloat() / total.toFloat() },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Temporal", style = MaterialTheme.typography.titleMedium)
-            Text("Assigned ${report.temporal.recordsWithTemporalAssignment} unresolved ${report.temporal.unresolvedTemporalCount}")
-            Text("Due ${report.temporal.beforeDueCount}/${report.temporal.atDueCount}/${report.temporal.pastDueCount}")
+    AgbofaSectionHeader("Office health")
+    val healthy = report.integrity.errorCount == 0 && report.integrity.warningCount == 0
+    AgbofaSurfaceCard {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text(if (healthy) "Healthy" else "Needs review", style = MaterialTheme.typography.titleMedium)
+                Text("Integrity is advisory context, not a scoreboard.", style = MaterialTheme.typography.bodySmall, color = BrandMuted)
+            }
+            AgbofaStatusPill(
+                text = if (healthy) "Healthy" else "Review",
+                tone = if (healthy) PillTone.Positive else PillTone.Critical,
+            )
         }
     }
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Workflow", style = MaterialTheme.typography.titleMedium)
-            Text("With ${report.workflow.recordsWithWorkflow} complete ${report.workflow.workflowCompleteCount} active ${report.workflow.workflowWithActiveStepCount}")
-        }
-    }
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Integrity", style = MaterialTheme.typography.titleMedium)
-            Text("Healthy ${report.integrity.healthyCount} warn ${report.integrity.warningCount} error ${report.integrity.errorCount}")
-        }
+}
+
+@Composable
+private fun Metric(label: String, value: String, modifier: Modifier = Modifier) {
+    AgbofaSurfaceCard(modifier) {
+        Text(value, style = MaterialTheme.typography.headlineMedium, color = BrandPrimary)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = BrandMuted)
     }
 }
