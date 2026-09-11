@@ -37,6 +37,8 @@ import com.agbofa.smartoffice.domain.operations.TemporalResolution
 import com.agbofa.smartoffice.domain.operations.DueStatus
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.UUID
 
 /**
@@ -187,10 +189,15 @@ class JournalViewModel(
     }
 
     fun assignDue(operationalRecordId: String) {
-        val raw = dueDrafts[operationalRecordId].orEmpty()
-        val instant = runCatching { Instant.parse(raw.trim()) }.getOrNull()
+        val raw = dueDrafts[operationalRecordId].orEmpty().trim()
+        val instant = runCatching { Instant.parse(raw) }.getOrNull()
+            ?: runCatching {
+                LocalDate.parse(raw)
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant()
+            }.getOrNull()
         if (instant == null) {
-            message = "Due must be an explicit ISO-8601 instant"
+            message = "Due must be an ISO-8601 instant or a YYYY-MM-DD date"
             return
         }
         val result = assignOperationalTemporal.execute(

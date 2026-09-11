@@ -196,7 +196,7 @@ private fun JournalRecordRow(
                     color = BrandMuted,
                 )
                 if (dueStatus != null) AgbofaStatusPill(dueStatus.name.replace('_', ' '), PillTone.Attention)
-                // TODO: align due-date parser in JournalViewModel.assignDue with YYYY-MM-DD from picker
+
                 var showDuePicker by remember { mutableStateOf(false) }
 
                 OutlinedTextField(
