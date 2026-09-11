@@ -10,6 +10,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -20,8 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.presentation.components.AgbofaIcons
 import com.agbofa.smartoffice.presentation.components.IconMark
-import com.agbofa.smartoffice.presentation.theme.BrandBackground
-import com.agbofa.smartoffice.presentation.theme.BrandPrimary
+import com.agbofa.smartoffice.presentation.settings.LocalOfficePreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,9 +30,10 @@ fun SmartOfficeScaffold(
     onDestination: (AppDestination) -> Unit,
     content: @Composable (Modifier) -> Unit,
 ) {
+    val officeName = LocalOfficePreferences.current.officeName
     Scaffold(
-        modifier = Modifier.semantics { contentDescription = "AGBOFA Smart Office" },
-        containerColor = BrandBackground,
+        modifier = Modifier.semantics { contentDescription = officeName },
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -42,7 +43,12 @@ fun SmartOfficeScaffold(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         IconMark()
-                        Text(destination.topTitle(), style = MaterialTheme.typography.titleLarge, color = BrandPrimary, maxLines = 1)
+                        Text(
+                            officeName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                        )
                     }
                 },
                 actions = {
@@ -52,21 +58,20 @@ fun SmartOfficeScaffold(
                     IconButton(onClick = { onDestination(AppDestination.INTELLIGENCE) }) {
                         Icon(AgbofaIcons.Intelligence, contentDescription = "Advisory intelligence")
                     }
+                    TextButton(
+                        onClick = { onDestination(AppDestination.SETTINGS) },
+                        modifier = Modifier.semantics { contentDescription = "Settings" },
+                    ) {
+                        Text("Settings")
+                    }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandBackground),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ),
             )
         },
         bottomBar = { BottomNav(current = destination, onSelect = onDestination) },
     ) { padding ->
         content(Modifier.padding(padding))
     }
-}
-
-private fun AppDestination.topTitle(): String = when (this) {
-    AppDestination.DASHBOARD -> "AGBOFA"
-    AppDestination.JOURNAL -> "Journal"
-    AppDestination.DECISION -> "Decisions"
-    AppDestination.SEARCH -> "Search"
-    AppDestination.ANALYTICS -> "Analytics"
-    AppDestination.INTELLIGENCE -> "Intelligence"
 }
