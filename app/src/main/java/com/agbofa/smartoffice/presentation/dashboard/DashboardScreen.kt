@@ -25,20 +25,22 @@ import com.agbofa.smartoffice.presentation.components.AgbofaSectionHeader
 import com.agbofa.smartoffice.presentation.components.AgbofaStatusPill
 import com.agbofa.smartoffice.presentation.components.AgbofaSurfaceCard
 import com.agbofa.smartoffice.presentation.components.PillTone
+import com.agbofa.smartoffice.presentation.settings.LocalOfficePreferences
 import com.agbofa.smartoffice.presentation.theme.BrandMuted
 import com.agbofa.smartoffice.presentation.theme.BrandPrimary
 
 @Composable
 fun DashboardScreen(state: DashboardUiState, onRefresh: () -> Unit, modifier: Modifier = Modifier) {
+    val prefs = LocalOfficePreferences.current
     Column(
         modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp)
-            .semantics { contentDescription = "AGBOFA Smart Office home" },
+            .semantics { contentDescription = prefs.officeName },
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         AgbofaPageHeader(
-            eyebrow = "AGBOFA SMART OFFICE",
-            title = "Your office, at a glance.",
-            subtitle = "A calm view of what is open, due, and waiting on you.",
+            eyebrow = prefs.monogram,
+            title = prefs.officeName,
+            subtitle = prefs.officeSubtitle,
         )
         AgbofaSecondaryButton(text = "Refresh office", onClick = onRefresh)
         when {

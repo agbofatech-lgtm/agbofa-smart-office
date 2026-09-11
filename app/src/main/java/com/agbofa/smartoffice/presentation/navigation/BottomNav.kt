@@ -36,4 +36,5 @@ internal fun AppDestination.icon(): ImageVector = when (this) {
     AppDestination.SEARCH -> AgbofaIcons.Search
     AppDestination.ANALYTICS -> AgbofaIcons.Analytics
     AppDestination.INTELLIGENCE -> AgbofaIcons.Intelligence
+    AppDestination.SETTINGS -> AgbofaIcons.Home
 }
