@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,12 +31,21 @@ import com.agbofa.smartoffice.presentation.search.SearchScreen
 import com.agbofa.smartoffice.presentation.search.SearchViewModel
 import com.agbofa.smartoffice.presentation.intelligence.IntelligenceScreen
 import com.agbofa.smartoffice.presentation.intelligence.IntelligenceViewModel
+import com.agbofa.smartoffice.presentation.settings.LocalOfficePreferences
+import com.agbofa.smartoffice.presentation.settings.OfficePreferences
+import com.agbofa.smartoffice.presentation.settings.OfficePreferencesRepository
+import com.agbofa.smartoffice.presentation.settings.SettingsScreen
+import com.agbofa.smartoffice.presentation.settings.SettingsViewModel
 import com.agbofa.smartoffice.presentation.theme.SmartOfficeTheme
 import java.time.Instant
 
 class MainActivity : ComponentActivity() {
     private val app: SmartOfficeApplication
         get() = application as SmartOfficeApplication
+
+    private val officePreferencesRepository by lazy {
+        OfficePreferencesRepository(applicationContext)
+    }
 
     private val journalViewModel: JournalViewModel by viewModels { factory { journalVm() } }
     private val dashboardViewModel: DashboardViewModel by viewModels {
@@ -59,6 +70,9 @@ class MainActivity : ComponentActivity() {
     private val intelligenceViewModel: IntelligenceViewModel by viewModels {
         factory { IntelligenceViewModel(app.generateIntelligence) }
     }
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        factory { SettingsViewModel(officePreferencesRepository) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -71,70 +85,83 @@ class MainActivity : ComponentActivity() {
         analyticsViewModel.refresh(context)
         enableEdgeToEdge()
         setContent {
-            SmartOfficeTheme {
-                var destination by rememberSaveable { mutableStateOf(AppDestination.DASHBOARD.name) }
-                val selected = AppDestination.valueOf(destination)
-                SmartOfficeScaffold(destination = selected, onDestination = { destination = it.name }) { modifier ->
-                    when (selected) {
-                        AppDestination.JOURNAL -> JournalScreen(
-                            expression = journalViewModel.expression,
-                            message = journalViewModel.message,
-                            records = journalViewModel.records,
-                            pendingType = journalViewModel.pendingType,
-                            onExpressionChange = journalViewModel::onExpressionChange,
-                            onCapture = journalViewModel::captureAndAdmit,
-                            onTypeSelected = journalViewModel::onTypeSelected,
-                            onClassify = journalViewModel::classify,
-                            onCreateOperational = journalViewModel::createOperational,
-                            onTransitionState = journalViewModel::transitionState,
-                            temporals = journalViewModel.temporals,
-                            dueStatuses = journalViewModel.dueStatuses,
-                            prerequisiteLabels = journalViewModel.prerequisiteLabels,
-                            dueDrafts = journalViewModel.dueDrafts,
-                            referenceDrafts = journalViewModel.referenceDrafts,
-                            prerequisiteDrafts = journalViewModel.prerequisiteDrafts,
-                            onDueDraftChange = journalViewModel::onDueDraftChange,
-                            onReferenceDraftChange = journalViewModel::onReferenceDraftChange,
-                            onPrerequisiteDraftChange = journalViewModel::onPrerequisiteDraftChange,
-                            onAssignDue = journalViewModel::assignDue,
-                            onAssignUnresolved = journalViewModel::assignUnresolved,
-                            onEvaluateDue = journalViewModel::evaluateDue,
-                            onCreateDependency = journalViewModel::createDependency,
-                            modifier = modifier,
-                        )
-                        AppDestination.DASHBOARD -> DashboardScreen(
-                            state = dashboardViewModel.state,
-                            onRefresh = { dashboardViewModel.refresh(edgeContext()) },
-                            modifier = modifier,
-                        )
-                        AppDestination.DECISION -> DecisionScreen(
-                            state = decisionViewModel.state,
-                            onRefresh = decisionViewModel::refresh,
-                            onApprove = { id -> decisionViewModel.approve(id, Instant.now()) },
-                            onReject = { id -> decisionViewModel.reject(id, Instant.now()) },
-                            onWithdraw = { id -> decisionViewModel.withdraw(id, Instant.now()) },
-                            modifier = modifier,
-                        )
-                        AppDestination.ANALYTICS -> AnalyticsScreen(
-                            state = analyticsViewModel.state,
-                            onRefresh = {
-                                intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
-                                analyticsViewModel.refresh(edgeContext())
-                            },
-                            modifier = modifier,
-                        )
-                        AppDestination.INTELLIGENCE -> IntelligenceScreen(
-                            state = intelligenceViewModel.state,
-                            onRefresh = { intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now()))) },
-                            modifier = modifier,
-                        )
-                        AppDestination.SEARCH -> SearchScreen(
-                            state = searchViewModel.state,
-                            onQueryChange = searchViewModel::onQueryChange,
-                            onSearch = searchViewModel::search,
-                            onRebuild = { searchViewModel.rebuild(edgeContext()) },
-                            modifier = modifier,
-                        )
+            val preferences by officePreferencesRepository.preferences.collectAsState(OfficePreferences())
+            CompositionLocalProvider(LocalOfficePreferences provides preferences) {
+                SmartOfficeTheme {
+                    var destination by rememberSaveable { mutableStateOf(AppDestination.DASHBOARD.name) }
+                    val selected = AppDestination.valueOf(destination)
+                    SmartOfficeScaffold(destination = selected, onDestination = { destination = it.name }) { modifier ->
+                        when (selected) {
+                            AppDestination.JOURNAL -> JournalScreen(
+                                expression = journalViewModel.expression,
+                                message = journalViewModel.message,
+                                records = journalViewModel.records,
+                                pendingType = journalViewModel.pendingType,
+                                onExpressionChange = journalViewModel::onExpressionChange,
+                                onCapture = journalViewModel::captureAndAdmit,
+                                onTypeSelected = journalViewModel::onTypeSelected,
+                                onClassify = journalViewModel::classify,
+                                onCreateOperational = journalViewModel::createOperational,
+                                onTransitionState = journalViewModel::transitionState,
+                                temporals = journalViewModel.temporals,
+                                dueStatuses = journalViewModel.dueStatuses,
+                                prerequisiteLabels = journalViewModel.prerequisiteLabels,
+                                dueDrafts = journalViewModel.dueDrafts,
+                                referenceDrafts = journalViewModel.referenceDrafts,
+                                prerequisiteDrafts = journalViewModel.prerequisiteDrafts,
+                                onDueDraftChange = journalViewModel::onDueDraftChange,
+                                onReferenceDraftChange = journalViewModel::onReferenceDraftChange,
+                                onPrerequisiteDraftChange = journalViewModel::onPrerequisiteDraftChange,
+                                onAssignDue = journalViewModel::assignDue,
+                                onAssignUnresolved = journalViewModel::assignUnresolved,
+                                onEvaluateDue = journalViewModel::evaluateDue,
+                                onCreateDependency = journalViewModel::createDependency,
+                                modifier = modifier,
+                            )
+                            AppDestination.DASHBOARD -> DashboardScreen(
+                                state = dashboardViewModel.state,
+                                onRefresh = { dashboardViewModel.refresh(edgeContext()) },
+                                modifier = modifier,
+                            )
+                            AppDestination.DECISION -> DecisionScreen(
+                                state = decisionViewModel.state,
+                                onRefresh = decisionViewModel::refresh,
+                                onApprove = { id -> decisionViewModel.approve(id, Instant.now()) },
+                                onReject = { id -> decisionViewModel.reject(id, Instant.now()) },
+                                onWithdraw = { id -> decisionViewModel.withdraw(id, Instant.now()) },
+                                modifier = modifier,
+                            )
+                            AppDestination.ANALYTICS -> AnalyticsScreen(
+                                state = analyticsViewModel.state,
+                                onRefresh = {
+                                    intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
+                                    analyticsViewModel.refresh(edgeContext())
+                                },
+                                modifier = modifier,
+                            )
+                            AppDestination.INTELLIGENCE -> IntelligenceScreen(
+                                state = intelligenceViewModel.state,
+                                onRefresh = { intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now()))) },
+                                modifier = modifier,
+                            )
+                            AppDestination.SEARCH -> SearchScreen(
+                                state = searchViewModel.state,
+                                onQueryChange = searchViewModel::onQueryChange,
+                                onSearch = searchViewModel::search,
+                                onRebuild = { searchViewModel.rebuild(edgeContext()) },
+                                modifier = modifier,
+                            )
+                            AppDestination.SETTINGS -> SettingsScreen(
+                                draft = settingsViewModel.draft,
+                                status = settingsViewModel.status,
+                                onOfficeNameChange = settingsViewModel::onOfficeNameChange,
+                                onOfficeSubtitleChange = settingsViewModel::onOfficeSubtitleChange,
+                                onMonogramChange = settingsViewModel::onMonogramChange,
+                                onPaletteChange = settingsViewModel::onPaletteChange,
+                                onSave = settingsViewModel::save,
+                                modifier = modifier,
+                            )
+                        }
                     }
                 }
             }
