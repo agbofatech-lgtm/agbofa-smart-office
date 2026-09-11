@@ -48,7 +48,6 @@ import com.agbofa.smartoffice.domain.workflow.WorkflowStepId
 import com.agbofa.smartoffice.domain.workflow.WorkflowStepStatus
 import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransition
 import com.agbofa.smartoffice.domain.workflow.WorkflowStepTransitionId
-import com.agbofa.smartoffice.domain.workflow.WorkflowTransitionBasis
 import com.agbofa.smartoffice.domain.capture.Capture
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import com.agbofa.smartoffice.domain.operations.OperationalRecord
@@ -318,14 +317,14 @@ internal fun WorkflowStepTransitionEntity.toDomain(): WorkflowStepTransition? {
     val stepId = (WorkflowStepId.of(workflowStepId) as? DomainResult.Success)?.value ?: return null
     val from = runCatching { WorkflowStepStatus.valueOf(fromStatus) }.getOrNull() ?: return null
     val to = runCatching { WorkflowStepStatus.valueOf(toStatus) }.getOrNull() ?: return null
-    val basis = runCatching { WorkflowTransitionBasis.valueOf(basis) }.getOrNull() ?: return null
+    val parsedBasis = runCatching { WorkflowBasis.valueOf(basis) }.getOrNull() ?: return null
     return (WorkflowStepTransition.of(
         id = id,
         workflowStepId = stepId,
         fromStatus = from,
         toStatus = to,
         transitionedAt = WorkflowTransitionInstant(Instant.parse(transitionedAt)),
-        basis = basis,
+        basis = parsedBasis,
         ruleVersion = ruleVersion,
     ) as? DomainResult.Success)?.value
 }

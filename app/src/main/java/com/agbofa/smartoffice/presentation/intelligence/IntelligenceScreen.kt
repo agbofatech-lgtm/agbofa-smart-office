@@ -81,7 +81,11 @@ private fun ReportBody(report: IntelligenceReport) {
             AgbofaSurfaceCard {
                 Text(item.type.name.replace('_', ' '), style = MaterialTheme.typography.titleSmall)
                 Text(item.description)
-                Text(item.evidence, color = BrandMuted, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    item.evidence.entries.joinToString("; ") { "${it.key}: ${it.value}" },
+                    color = BrandMuted,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }
