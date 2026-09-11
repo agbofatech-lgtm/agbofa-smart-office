@@ -1,7 +1,6 @@
 package com.agbofa.smartoffice.presentation.journal
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -38,6 +37,7 @@ import com.agbofa.smartoffice.domain.operations.TemporalResolution
 import com.agbofa.smartoffice.domain.operations.DueStatus
 import com.agbofa.smartoffice.domain.operations.OperationalCreationBasis
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Coordinates capture, journal, classification, and explicit operationalization.
@@ -69,11 +69,6 @@ class JournalViewModel(
     var draftTypes by mutableStateOf<Map<String, ClassificationType>>(emptyMap())
         private set
     val pendingType: Map<String, ClassificationType> get() = draftTypes
-    private var nextSequence by mutableIntStateOf(1)
-    private var nextClassification by mutableIntStateOf(1)
-    private var nextOperational by mutableIntStateOf(1)
-    private var nextTemporal by mutableIntStateOf(1)
-    private var nextDependency by mutableIntStateOf(1)
     var dueDrafts by mutableStateOf<Map<String, String>>(emptyMap())
         private set
     var referenceDrafts by mutableStateOf<Map<String, String>>(emptyMap())
@@ -100,10 +95,8 @@ class JournalViewModel(
     }
 
     fun captureAndAdmit() {
-        val sequence = nextSequence
-        nextSequence += 1
-        val captureId = "capture-$sequence"
-        val journalId = "journal-$sequence"
+        val captureId = "capture-${UUID.randomUUID()}"
+        val journalId = "journal-${UUID.randomUUID()}"
         val now = Instant.now()
         when (
             val captured = captureExpression.execute(
@@ -136,8 +129,7 @@ class JournalViewModel(
 
     fun classify(journalEntryId: String) {
         val type = draftTypes[journalEntryId] ?: return
-        val classificationId = "cls-$nextClassification"
-        nextClassification += 1
+        val classificationId = "cls-${UUID.randomUUID()}"
         val result = classifyJournalEntry.execute(
             classificationId = classificationId,
             journalEntryIdValue = journalEntryId,
@@ -153,8 +145,7 @@ class JournalViewModel(
     }
 
     fun createOperational(journalEntryId: String) {
-        val id = "op-$nextOperational"
-        nextOperational += 1
+        val id = "op-${UUID.randomUUID()}"
         val result = createOperationalRecord.execute(
             operationalRecordId = id,
             journalEntryIdValue = journalEntryId,
@@ -169,10 +160,8 @@ class JournalViewModel(
     }
 
     fun transitionState(operationalRecordId: String, toState: OperationalState) {
-        val sequence = nextSequence
-        nextSequence += 1
         val result = transitionOperationalRecordState.execute(
-            transitionId = "st-$sequence",
+            transitionId = "st-${UUID.randomUUID()}",
             operationalRecordIdValue = operationalRecordId,
             toState = toState,
             transitionedAt = OperationalTransitionInstant(Instant.now()),
@@ -205,13 +194,12 @@ class JournalViewModel(
             return
         }
         val result = assignOperationalTemporal.execute(
-            temporalId = "tmp-$nextTemporal",
+            temporalId = "tmp-${UUID.randomUUID()}",
             operationalRecordIdValue = operationalRecordId,
             resolution = TemporalResolution.RESOLVED,
             assignedAt = TemporalAssignmentInstant(Instant.now()),
             dueInstant = DueInstant(instant),
         )
-        nextTemporal += 1
         message = when (result) {
             is DomainResult.Success -> "Due assigned"
             is DomainResult.Failure -> result.error.message
@@ -221,13 +209,12 @@ class JournalViewModel(
 
     fun assignUnresolved(operationalRecordId: String) {
         val result = assignOperationalTemporal.execute(
-            temporalId = "tmp-$nextTemporal",
+            temporalId = "tmp-${UUID.randomUUID()}",
             operationalRecordIdValue = operationalRecordId,
             resolution = TemporalResolution.UNRESOLVED,
             assignedAt = TemporalAssignmentInstant(Instant.now()),
             referenceExpression = referenceDrafts[operationalRecordId],
         )
-        nextTemporal += 1
         message = when (result) {
             is DomainResult.Success -> "Unresolved temporal reference stored"
             is DomainResult.Failure -> result.error.message
@@ -252,12 +239,11 @@ class JournalViewModel(
     fun createDependency(dependentId: String) {
         val prerequisite = prerequisiteDrafts[dependentId].orEmpty()
         val result = createOperationalDependency.execute(
-            dependencyId = "dep-$nextDependency",
+            dependencyId = "dep-${UUID.randomUUID()}",
             dependentIdValue = dependentId,
             prerequisiteIdValue = prerequisite,
             createdAt = OperationalDependencyCreationInstant(Instant.now()),
         )
-        nextDependency += 1
         message = when (result) {
             is DomainResult.Success -> "Dependency created"
             is DomainResult.Failure -> result.error.message
