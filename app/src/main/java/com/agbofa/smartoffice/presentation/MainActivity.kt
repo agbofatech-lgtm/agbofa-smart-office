@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartOfficeTheme {
-                var destination by rememberSaveable { mutableStateOf(AppDestination.JOURNAL.name) }
+                var destination by rememberSaveable { mutableStateOf(AppDestination.DASHBOARD.name) }
                 val selected = AppDestination.valueOf(destination)
                 SmartOfficeScaffold(destination = selected, onDestination = { destination = it.name }) { modifier ->
                     when (selected) {
@@ -117,8 +117,10 @@ class MainActivity : ComponentActivity() {
                         )
                         AppDestination.ANALYTICS -> AnalyticsScreen(
                             state = analyticsViewModel.state,
-                            onRefresh = { intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
-        analyticsViewModel.refresh(edgeContext()) },
+                            onRefresh = {
+                                intelligenceViewModel.refresh(EvaluationContext(EvaluationInstant(Instant.now())))
+                                analyticsViewModel.refresh(edgeContext())
+                            },
                             modifier = modifier,
                         )
                         AppDestination.INTELLIGENCE -> IntelligenceScreen(

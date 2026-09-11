@@ -8,16 +8,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.application.decision.DecisionListItem
 import com.agbofa.smartoffice.domain.decision.DecisionStatus
+import com.agbofa.smartoffice.presentation.components.AgbofaEmptyState
+import com.agbofa.smartoffice.presentation.components.AgbofaPageHeader
+import com.agbofa.smartoffice.presentation.components.AgbofaPrimaryButton
+import com.agbofa.smartoffice.presentation.components.AgbofaSecondaryButton
+import com.agbofa.smartoffice.presentation.components.AgbofaStatusPill
+import com.agbofa.smartoffice.presentation.components.AgbofaSurfaceCard
+import com.agbofa.smartoffice.presentation.components.PillTone
+import com.agbofa.smartoffice.presentation.labels.asLabel
+import com.agbofa.smartoffice.presentation.theme.BrandMuted
 
 @Composable
 fun DecisionScreen(
@@ -28,15 +36,26 @@ fun DecisionScreen(
     onWithdraw: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Decisions", style = MaterialTheme.typography.headlineSmall)
-        Button(onClick = onRefresh) { Text("Refresh") }
-        if (state.message.isNotBlank()) Text(state.message)
+    Column(
+        modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp)
+            .semantics { contentDescription = "Decisions workspace" },
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        AgbofaPageHeader(
+            eyebrow = "Decisions",
+            title = "Where the human decides.",
+            subtitle = "Approve, decline, or withdraw. The office never decides for you.",
+        )
+        AgbofaSecondaryButton(text = "Refresh decisions", onClick = onRefresh)
+        if (state.message.isNotBlank()) Text(state.message, color = BrandMuted)
         when {
-            state.loading -> Text("Loading")
-            state.error != null -> Text("Error: ${state.error}")
-            state.empty -> Text("No decisions.")
-            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            state.loading -> Text("Loading decisions…", color = BrandMuted)
+            state.error != null -> Text("Unable to load decisions.", color = MaterialTheme.colorScheme.error)
+            state.empty -> AgbofaEmptyState(
+                title = "No decisions waiting",
+                body = "When a proposed decision exists, it appears here for a human action.",
+            )
+            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                 items(state.items, key = { it.decision.id.value }) { item ->
                     DecisionCard(item, onApprove, onReject, onWithdraw)
                 }
@@ -52,17 +71,27 @@ private fun DecisionCard(
     onReject: (String) -> Unit,
     onWithdraw: (String) -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(item.decision.id.value, style = MaterialTheme.typography.titleMedium)
-            Text("Status: ${item.status}")
-            Text(item.decision.rationale)
-            if (item.status == DecisionStatus.PROPOSED) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { onApprove(item.decision.id.value) }) { Text("Approve") }
-                    OutlinedButton(onClick = { onReject(item.decision.id.value) }) { Text("Reject") }
-                    OutlinedButton(onClick = { onWithdraw(item.decision.id.value) }) { Text("Withdraw") }
-                }
+    val id = item.decision.id.value
+    AgbofaSurfaceCard {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Decision", style = MaterialTheme.typography.titleMedium)
+            AgbofaStatusPill(
+                text = item.status.asLabel(),
+                tone = when (item.status) {
+                    DecisionStatus.PROPOSED -> PillTone.Authority
+                    DecisionStatus.APPROVED -> PillTone.Positive
+                    DecisionStatus.REJECTED -> PillTone.Critical
+                    DecisionStatus.WITHDRAWN -> PillTone.Neutral
+                },
+            )
+        }
+        Text(item.decision.rationale, style = MaterialTheme.typography.bodyMedium)
+        Text(id, style = MaterialTheme.typography.bodySmall, color = BrandMuted)
+        if (item.status == DecisionStatus.PROPOSED) {
+            AgbofaPrimaryButton(text = "Approve", onClick = { onApprove(id) })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AgbofaSecondaryButton(text = "Decline", onClick = { onReject(id) }, modifier = Modifier.weight(1f))
+                AgbofaSecondaryButton(text = "Withdraw", onClick = { onWithdraw(id) }, modifier = Modifier.weight(1f))
             }
         }
     }

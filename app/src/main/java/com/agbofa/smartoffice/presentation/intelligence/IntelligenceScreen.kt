@@ -3,18 +3,25 @@ package com.agbofa.smartoffice.presentation.intelligence
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.agbofa.smartoffice.domain.intelligence.IntelligenceReport
+import com.agbofa.smartoffice.presentation.components.AgbofaEmptyState
+import com.agbofa.smartoffice.presentation.components.AgbofaPageHeader
+import com.agbofa.smartoffice.presentation.components.AgbofaSecondaryButton
+import com.agbofa.smartoffice.presentation.components.AgbofaSectionHeader
+import com.agbofa.smartoffice.presentation.components.AgbofaStatusPill
+import com.agbofa.smartoffice.presentation.components.AgbofaSurfaceCard
+import com.agbofa.smartoffice.presentation.components.PillTone
+import com.agbofa.smartoffice.presentation.theme.BrandMuted
 
 @Composable
 fun IntelligenceScreen(
@@ -23,16 +30,25 @@ fun IntelligenceScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .semantics { contentDescription = "Advisory intelligence" },
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Intelligence advisory", style = MaterialTheme.typography.headlineSmall)
-        Text("Derived. Ephemeral. Not canonical. Not AI.")
-        Button(onClick = onRefresh) { Text("Refresh") }
+        AgbofaPageHeader(
+            eyebrow = "Advisory",
+            title = "What deserves your attention?",
+            subtitle = "Derived. Ephemeral. Not canonical. Not AI. A human still decides.",
+        )
+        AgbofaSecondaryButton("Refresh advisory", onRefresh)
+        AgbofaStatusPill("Advisory only", PillTone.Neutral)
         when {
-            state.loading -> Text("Loading")
-            state.error != null -> Text("Error: ${state.error}")
-            state.report == null -> Text("No advisory report.")
+            state.loading -> Text("Deriving advisory view…", color = BrandMuted)
+            state.error != null -> Text("Unable to derive advisory view.", color = MaterialTheme.colorScheme.error)
+            state.report == null -> AgbofaEmptyState(
+                title = "No advisory report",
+                body = "Refresh after office records exist. Nothing is invented here.",
+            )
             else -> ReportBody(state.report!!)
         }
     }
@@ -40,46 +56,48 @@ fun IntelligenceScreen(
 
 @Composable
 private fun ReportBody(report: IntelligenceReport) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Summary", style = MaterialTheme.typography.titleMedium)
-            Text("Recommendations ${report.summary.recommendationCount}")
-            Text("Anomalies ${report.summary.anomalyCount}")
-            Text("Critical ${report.summary.criticalCount}")
-            Text("Advisory priority items ${report.summary.prioritizedCount}")
-        }
+    AgbofaSectionHeader("Summary")
+    AgbofaSurfaceCard {
+        Text("Recommendations ${report.summary.recommendationCount}  ·  Anomalies ${report.summary.anomalyCount}")
+        Text("Critical ${report.summary.criticalCount}  ·  Prioritized ${report.summary.prioritizedCount}", color = BrandMuted)
     }
-    Text("Recommendations", style = MaterialTheme.typography.titleMedium)
-    if (report.recommendations.isEmpty()) Text("None.")
-    report.recommendations.forEach { item ->
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
-                Text(item.type.name)
-                Text("Target: ${item.targetId ?: "-"}")
+    AgbofaSectionHeader("Recommendations")
+    if (report.recommendations.isEmpty()) {
+        AgbofaEmptyState(title = "No recommendations", body = "Nothing advisory is waiting.")
+    } else {
+        report.recommendations.forEach { item ->
+            AgbofaSurfaceCard {
+                Text(item.type.name.replace('_', ' '), style = MaterialTheme.typography.titleSmall)
                 Text(item.reason)
-                Text("Source: ${item.source}  Severity: ${item.severity}")
+                Text("Target ${item.targetId ?: "—"}  ·  ${item.severity}", color = BrandMuted, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
-    Text("Anomalies", style = MaterialTheme.typography.titleMedium)
-    if (report.anomalies.isEmpty()) Text("None.")
-    report.anomalies.forEach { item ->
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
-                Text(item.type.name)
-                Text("Target: ${item.targetId ?: "-"}")
+    AgbofaSectionHeader("Anomalies")
+    if (report.anomalies.isEmpty()) {
+        AgbofaEmptyState(title = "No anomalies", body = "No derived irregularities in the current office data.")
+    } else {
+        report.anomalies.forEach { item ->
+            AgbofaSurfaceCard {
+                Text(item.type.name.replace('_', ' '), style = MaterialTheme.typography.titleSmall)
                 Text(item.description)
-                Text("Evidence: ${item.evidence}")
+                Text(
+                    item.evidence.entries.joinToString("; ") { "${it.key}: ${it.value}" },
+                    color = BrandMuted,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }
-    Text("Advisory priority (not a business fact)", style = MaterialTheme.typography.titleMedium)
-    if (report.prioritized.isEmpty()) Text("None.")
-    report.prioritized.forEachIndexed { index, item ->
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
-                Text("#${index + 1} ${item.targetId} score ${item.score}")
+    AgbofaSectionHeader("Advisory priority")
+    if (report.prioritized.isEmpty()) {
+        AgbofaEmptyState(title = "No priority list", body = "Priority is advisory context, not a business fact.")
+    } else {
+        report.prioritized.forEachIndexed { index, item ->
+            AgbofaSurfaceCard {
+                Text("#${index + 1}  ${item.targetId}", style = MaterialTheme.typography.titleSmall)
                 Text(item.explanation)
+                Text("Score ${item.score}", color = BrandMuted, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
