@@ -12,6 +12,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -58,8 +59,12 @@ private fun CommandCenter(report: OperationalAnalyticsReport, overviewCount: Int
         report.integrity.warningCount + report.integrity.errorCount
     AgbofaSectionHeader("Attention", "Only counts from live operational data.")
     AgbofaSurfaceCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text("Needs a look", style = MaterialTheme.typography.titleMedium)
                 Text(
                     if (attention == 0) "Nothing urgent is waiting." else "$attention item(s) from dues and office health.",
@@ -107,8 +112,12 @@ private fun CommandCenter(report: OperationalAnalyticsReport, overviewCount: Int
     AgbofaSectionHeader("Office health")
     val healthy = report.integrity.errorCount == 0 && report.integrity.warningCount == 0
     AgbofaSurfaceCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(if (healthy) "Healthy" else "Needs review", style = MaterialTheme.typography.titleMedium)
                 Text("Integrity is advisory context, not a scoreboard.", style = MaterialTheme.typography.bodySmall, color = BrandMuted)
             }
