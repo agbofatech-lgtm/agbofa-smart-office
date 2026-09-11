@@ -7,13 +7,14 @@ enum class AppDestination(val label: String, val primary: Boolean) {
     SEARCH("Search", true),
     ANALYTICS("Analytics", false),
     INTELLIGENCE("Intelligence", false),
+    SETTINGS("Settings", false),
     ;
 
     val shortLabel: String get() = label
 
     companion object {
         val primaryDestinations: List<AppDestination> = entries.filter { it.primary }
-        val insightDestinations: List<AppDestination> = entries.filter { !it.primary }
+        val insightDestinations: List<AppDestination> = entries.filter { !it.primary && it != SETTINGS }
         val primary: List<AppDestination> get() = primaryDestinations
         val insights: List<AppDestination> get() = insightDestinations
     }
