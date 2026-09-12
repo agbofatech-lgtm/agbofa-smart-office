@@ -25,8 +25,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AuthorizedActionRequestEntity::class,
         AuthorizedActionExecutionEntity::class,
         SearchIndexEntity::class,
+        PersonEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class SmartOfficeDatabase : RoomDatabase() {
@@ -129,7 +130,6 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                 )
             }
         }
-
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {
@@ -248,7 +248,6 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                 )
             }
         }
-
 
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(database: SupportSQLiteDatabase) {
@@ -381,6 +380,32 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS people (
+                        id TEXT NOT NULL,
+                        displayName TEXT NOT NULL,
+                        category TEXT,
+                        role TEXT,
+                        phone TEXT,
+                        email TEXT,
+                        location TEXT,
+                        createdAt TEXT NOT NULL,
+                        updatedAt TEXT NOT NULL,
+                        archivedAt TEXT,
+                        PRIMARY KEY(id)
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_people_displayName ON people(displayName)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_people_category ON people(category)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_people_role ON people(role)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_people_archivedAt ON people(archivedAt)")
+            }
+        }
+
         fun create(context: Context): SmartOfficeDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
@@ -396,6 +421,7 @@ abstract class SmartOfficeDatabase : RoomDatabase() {
                     MIGRATION_6_7,
                     MIGRATION_7_8,
                     MIGRATION_8_9,
+                    MIGRATION_9_10,
                 )
                 // Main-thread queries remain because current use cases are synchronous
                 // and invoked from the composition-root UI thread. Removing this
