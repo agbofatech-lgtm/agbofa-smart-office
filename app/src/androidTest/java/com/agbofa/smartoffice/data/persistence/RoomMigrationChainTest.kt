@@ -35,12 +35,54 @@ class RoomMigrationChainTest {
 
     @Test
     @Throws(IOException::class)
-    fun stepwiseOneThroughNinePreservesCaptureAndJournal() {
+    fun stepwiseOneThroughTenPreservesCaptureAndJournal() {
         val db = openVersionOne()
         insertCanonical(db)
         applyAll(db)
         assertCanonical(db)
         assertTrue(tableExists(db, "search_index"))
+        assertTrue(tableExists(db, "people"))
+        assertEquals(0, countRows(db, "people"))
+        assertTrue(indexExists(db, "index_people_displayName"))
+        assertTrue(indexExists(db, "index_people_category"))
+        assertTrue(indexExists(db, "index_people_role"))
+        assertTrue(indexExists(db, "index_people_archivedAt"))
+        db.close()
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun nineToTenCreatesEmptyPeopleAndPreservesSearchIndex() {
+        val db = openVersionOne()
+        insertCanonical(db)
+        applyThrough(db, throughEnd = 9)
+        assertFalse(tableExists(db, "people"))
+        val searchCountBefore = countRows(db, "search_index")
+        SmartOfficeDatabase.MIGRATION_9_10.migrate(db)
+        db.setVersion(10)
+        assertTrue(tableExists(db, "people"))
+        assertEquals(0, countRows(db, "people"))
+        assertEquals(searchCountBefore, countRows(db, "search_index"))
+        assertCanonical(db)
+        assertTrue(indexExists(db, "index_people_displayName"))
+        assertTrue(indexExists(db, "index_people_category"))
+        assertTrue(indexExists(db, "index_people_role"))
+        assertTrue(indexExists(db, "index_people_archivedAt"))
+        var duplicateFailed = false
+        db.execSQL(
+            "INSERT INTO people(id, displayName, category, role, phone, email, location, createdAt, updatedAt, archivedAt) VALUES(?,?,?,?,?,?,?,?,?,?)",
+            arrayOf("11111111-1111-1111-1111-111111111111", "Ada", null, null, null, null, null, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", null),
+        )
+        try {
+            db.execSQL(
+                "INSERT INTO people(id, displayName, createdAt, updatedAt) VALUES(?,?,?,?)",
+                arrayOf("11111111-1111-1111-1111-111111111111", "Ada2", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"),
+            )
+        } catch (_: Exception) {
+            duplicateFailed = true
+        }
+        assertTrue(duplicateFailed)
+        db.execSQL("DELETE FROM people")
         db.close()
     }
 
@@ -53,11 +95,7 @@ class RoomMigrationChainTest {
         assertFalse(tableExists(db, "search_index"))
         SmartOfficeDatabase.MIGRATION_8_9.migrate(db)
         assertTrue(tableExists(db, "search_index"))
-        val count = db.query("SELECT COUNT(*) FROM search_index").use {
-            it.moveToFirst()
-            it.getInt(0)
-        }
-        assertEquals(0, count)
+        assertEquals(0, countRows(db, "search_index"))
         assertCanonical(db)
         db.close()
     }
@@ -143,6 +181,7 @@ class RoomMigrationChainTest {
             SmartOfficeDatabase.MIGRATION_6_7,
             SmartOfficeDatabase.MIGRATION_7_8,
             SmartOfficeDatabase.MIGRATION_8_9,
+            SmartOfficeDatabase.MIGRATION_9_10,
         )
         for (m in all) {
             if (m.endVersion <= throughEnd) m.migrate(db)
@@ -150,7 +189,7 @@ class RoomMigrationChainTest {
         db.setVersion(throughEnd)
     }
 
-    private fun applyAll(db: SupportSQLiteDatabase) = applyThrough(db, 9)
+    private fun applyAll(db: SupportSQLiteDatabase) = applyThrough(db, 10)
 
     private fun assertCanonical(db: SupportSQLiteDatabase) {
         db.query("SELECT id, originalExpression, capturedAt, source FROM captures WHERE id = 'cap-1'").use { c ->
@@ -169,10 +208,22 @@ class RoomMigrationChainTest {
     }
 
     private fun tableExists(db: SupportSQLiteDatabase, name: String): Boolean {
-        db.query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-            arrayOf(name),
-        ).use { return it.moveToFirst() }
+        db.query("SELECT name FROM sqlite_master WHERE type='table' AND name=?", arrayOf(name)).use {
+            return it.moveToFirst()
+        }
+    }
+
+    private fun indexExists(db: SupportSQLiteDatabase, name: String): Boolean {
+        db.query("SELECT name FROM sqlite_master WHERE type='index' AND name=?", arrayOf(name)).use {
+            return it.moveToFirst()
+        }
+    }
+
+    private fun countRows(db: SupportSQLiteDatabase, table: String): Int {
+        db.query("SELECT COUNT(*) FROM $table").use {
+            it.moveToFirst()
+            return it.getInt(0)
+        }
     }
 }
 
