@@ -40,7 +40,9 @@ fun SmartOfficeScaffold(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().semantics {
+                            contentDescription = "Office title $officeName"
+                        },
                     ) {
                         IconMark()
                         Text(
@@ -60,7 +62,7 @@ fun SmartOfficeScaffold(
                     }
                     TextButton(
                         onClick = { onDestination(AppDestination.SETTINGS) },
-                        modifier = Modifier.semantics { contentDescription = "Settings" },
+                        modifier = Modifier.semantics { contentDescription = "Open office settings" },
                     ) {
                         Text("Settings")
                     }

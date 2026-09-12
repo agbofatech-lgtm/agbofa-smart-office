@@ -32,15 +32,21 @@ import com.agbofa.smartoffice.presentation.theme.BrandPrimary
 @Composable
 fun DashboardScreen(state: DashboardUiState, onRefresh: () -> Unit, modifier: Modifier = Modifier) {
     val prefs = LocalOfficePreferences.current
+    val monogram = prefs.monogram.ifBlank { com.agbofa.smartoffice.presentation.settings.OfficePreferences.DEFAULT_MONOGRAM }
     Column(
         modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp)
-            .semantics { contentDescription = prefs.officeName },
+            .semantics {
+                contentDescription = "${prefs.officeName} home. Monogram $monogram. ${prefs.officeSubtitle}"
+            },
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         AgbofaPageHeader(
-            eyebrow = prefs.monogram,
+            eyebrow = monogram,
             title = prefs.officeName,
             subtitle = prefs.officeSubtitle,
+            modifier = Modifier.semantics {
+                contentDescription = "Office identity ${prefs.officeName}"
+            },
         )
         AgbofaSecondaryButton(text = "Refresh office", onClick = onRefresh)
         when {
