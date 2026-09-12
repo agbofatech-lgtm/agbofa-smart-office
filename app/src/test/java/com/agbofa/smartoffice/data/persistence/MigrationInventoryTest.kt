@@ -17,13 +17,14 @@ class MigrationInventoryTest {
         SmartOfficeDatabase.MIGRATION_6_7,
         SmartOfficeDatabase.MIGRATION_7_8,
         SmartOfficeDatabase.MIGRATION_8_9,
+        SmartOfficeDatabase.MIGRATION_9_10,
     )
 
     @Test
-    fun registeredPathIsOneThroughNine() {
-        assertEquals(8, all.size)
+    fun registeredPathIsOneThroughTen() {
+        assertEquals(9, all.size)
         assertEquals(1, all.first().startVersion)
-        assertEquals(9, all.last().endVersion)
+        assertEquals(10, all.last().endVersion)
         all.forEach { assertNotNull(it) }
         for (i in 0 until all.lastIndex) {
             assertEquals(all[i].endVersion, all[i + 1].startVersion)
@@ -31,9 +32,9 @@ class MigrationInventoryTest {
     }
 
     @Test
-    fun companionDoesNotDeclareNineToTen() {
+    fun companionDeclaresNineToTen() {
         val names = SmartOfficeDatabase.Companion::class.java.declaredFields.map { it.name }
-        assertFalse(names.any { it.contains("MIGRATION_9_10") })
+        assertTrue(names.any { it.contains("MIGRATION_9_10") })
     }
 
     @Test
@@ -44,11 +45,12 @@ class MigrationInventoryTest {
         )
         val text = candidates.first { it.exists() }.readText()
         assertFalse(text.contains("fallbackToDestructiveMigration"))
-        assertFalse(text.contains("MIGRATION_9_10"))
+        assertTrue(text.contains("MIGRATION_9_10"))
         assertFalse(text.contains("IntelligenceEntity"))
         assertFalse(text.contains("AnalyticsEntity"))
         assertTrue(text.contains("SearchIndexEntity"))
-        assertTrue(text.contains("version = 9"))
+        assertTrue(text.contains("PersonEntity"))
+        assertTrue(text.contains("version = 10"))
         assertTrue(text.contains("exportSchema = true"))
     }
 }
