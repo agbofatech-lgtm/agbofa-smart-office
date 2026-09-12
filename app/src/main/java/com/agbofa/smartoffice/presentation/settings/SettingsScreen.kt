@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -55,19 +56,19 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = draft.officeName,
                 onValueChange = onOfficeNameChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Office name" },
                 label = { Text("Office Name") },
             )
             OutlinedTextField(
                 value = draft.officeSubtitle,
                 onValueChange = onOfficeSubtitleChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Office subtitle" },
                 label = { Text("Office Subtitle") },
             )
             OutlinedTextField(
                 value = draft.monogram,
                 onValueChange = onMonogramChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Office monogram" },
                 label = { Text("Monogram") },
                 supportingText = { Text("Maximum 2 characters") },
             )
@@ -75,28 +76,46 @@ fun SettingsScreen(
         AgbofaSectionHeader("Palette")
         AgbofaSurfaceCard {
             OfficePalette.entries.forEach { option ->
+                val selected = draft.palette == option
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .selectable(
-                            selected = draft.palette == option,
+                            selected = selected,
                             onClick = { onPaletteChange(option) },
+                            role = Role.RadioButton,
                         )
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .semantics {
+                            contentDescription = if (selected) {
+                                "Palette ${option.name} selected"
+                            } else {
+                                "Palette ${option.name}"
+                            }
+                        },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     RadioButton(
-                        selected = draft.palette == option,
+                        selected = selected,
                         onClick = { onPaletteChange(option) },
                     )
                     Text(option.name)
                 }
             }
         }
-        AgbofaPrimaryButton("Save", onSave)
+        AgbofaPrimaryButton(
+            text = "Save",
+            onClick = onSave,
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Save office personalization" },
+        )
         if (status.isNotEmpty()) {
-            Text(status, color = BrandMuted, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                status,
+                color = BrandMuted,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { contentDescription = "Settings status $status" },
+            )
         }
         AgbofaSectionHeader("In-app manual")
         AgbofaSurfaceCard {

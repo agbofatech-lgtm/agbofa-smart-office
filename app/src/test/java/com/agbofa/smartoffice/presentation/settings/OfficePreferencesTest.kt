@@ -1,7 +1,6 @@
 package com.agbofa.smartoffice.presentation.settings
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class OfficePreferencesTest {
@@ -34,5 +33,21 @@ class OfficePreferencesTest {
     fun blankMonogramFallsBack() {
         val prefs = OfficePreferences.normalize("Headteacher Smart Assistant", "Help at the desk", "  ", OfficePalette.Agbofa)
         assertEquals("A", prefs.monogram)
+    }
+
+    @Test
+    fun dashboardIdentityUsesNormalizedValues() {
+        val prefs = OfficePreferences.normalize("  Lakeside HQ  ", "  Desk view  ", "lh", OfficePalette.Forest)
+        assertEquals("Lakeside HQ", prefs.officeName)
+        assertEquals("Desk view", prefs.officeSubtitle)
+        assertEquals("lh", prefs.monogram)
+        assertEquals(OfficePalette.Forest, prefs.palette)
+    }
+
+    @Test
+    fun iconMarkConsumesNormalizedMonogramNotHardcodedA() {
+        val prefs = OfficePreferences.normalize("West Wing", "Operations", "WW", OfficePalette.Slate)
+        assertEquals("WW", prefs.monogram)
+        assertEquals(false, prefs.monogram == "A" && prefs.officeName != OfficePreferences.DEFAULT_OFFICE_NAME)
     }
 }

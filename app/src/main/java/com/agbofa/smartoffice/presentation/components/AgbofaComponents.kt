@@ -23,8 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.agbofa.smartoffice.presentation.settings.LocalOfficePreferences
+import com.agbofa.smartoffice.presentation.settings.OfficePreferences
 import com.agbofa.smartoffice.presentation.theme.BrandAccent
 import com.agbofa.smartoffice.presentation.theme.BrandMuted
 import com.agbofa.smartoffice.presentation.theme.BrandPrimary
@@ -100,7 +104,12 @@ fun AgbofaStatusPill(text: String, tone: PillTone = PillTone.Neutral, modifier: 
 
 @Composable
 fun IconMark(modifier: Modifier = Modifier) {
-    Box(modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(BrandPrimary), contentAlignment = Alignment.Center) {
-        Text("A", color = Color.White, style = MaterialTheme.typography.titleMedium)
+    val mark = LocalOfficePreferences.current.monogram.ifBlank { OfficePreferences.DEFAULT_MONOGRAM }
+    Box(
+        modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(BrandPrimary)
+            .semantics { contentDescription = "Office monogram $mark" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(mark, color = Color.White, style = MaterialTheme.typography.titleMedium)
     }
 }
